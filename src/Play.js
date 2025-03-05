@@ -36,9 +36,7 @@ class Play extends Phaser.Scene {
         const bgLayer = map.createLayer('Tile Layer 1',tileset,0,0)
         const FootpathLayer = map.createLayer('Footpath',tileset,0,0)
         
-        FootpathLayer.setCollisionByProperty({collides: true})
-        // TreesLayer.setCollisionByProperty({collides: true})
-        
+        FootpathLayer.setCollisionByProperty({collides: true})        
         const Walrus_spawn = map.findObject('Spawn', (obj) => obj.name === 'Walrus spawn')
         
 
@@ -48,7 +46,6 @@ class Play extends Phaser.Scene {
             this.player.body.setCollideWorldBounds(true);
             this.player.setSize(56, 64);
             this.player.body.setBounce(2)
-            // this.player.body.setDamping(true).setDrag(0.5)
             this.isCooldown = false;
             this.cooldownTime = 2000;
             this.player_isTouching = false;
@@ -63,9 +60,9 @@ class Play extends Phaser.Scene {
 
         this.physics.add.collider(this.player, FootpathLayer)
 
-        // Start updating time survived every second
+
         this.timeEvent = this.time.addEvent({
-            delay: 1000, // Every second
+            delay: 1000, 
             callback: () => {
                 this.timeSurvived++;
                 this.timeText.setText(`Time: ${this.timeSurvived}s`);
@@ -73,20 +70,20 @@ class Play extends Phaser.Scene {
             loop: true
         });
 
-        // Display time survived
+
         this.timeText = this.add.text(20, 20, `Time: ${this.timeSurvived}s`, {
             fontSize: '32px',
             fill: '#ffffff',
             fontFamily: 'Arial',
             fontWeight: 'bold'
-        });
+        }).setScale(0.33);
 
-        // Display high score
+
         this.highScoreText = this.add.text(20, 60, `High Score: ${this.highScore}s`, {
-            fontSize: '24px',
+            fontSize: '32px',
             fill: '#ffffff',
             fontFamily: 'Arial'
-        });
+        }).setScale(0.33);
 
 
         this.anims.create({
@@ -133,15 +130,15 @@ class Play extends Phaser.Scene {
     }
     gameOver() {
         if (!this.isGameOver) {
-            this.isGameOver = true;  // Prevent multiple triggers
+            this.isGameOver = true;  
     
-            // Store high score if this is the best run
+            
             if (this.timeSurvived > this.highScore) {
                 this.highScore = this.timeSurvived;
                 localStorage.setItem('highScore', this.highScore);
             }
     
-            // Transition to the Game Over screen
+            
             this.scene.start('gameOver', { 
                 timeSurvived: this.timeSurvived, 
                 highScore: this.highScore 
@@ -156,31 +153,31 @@ class Play extends Phaser.Scene {
                 this.player_isTouching = false;
             }
 
-            // let playerVector = new Phaser.Math.Vector2(0, 0);
+            
             let playerVelocity = new Phaser.Math.Vector2(0, 0);
 
             if (cursors.up.isDown) {
                 this.SPEED_MULTIPLIER = 2
-                // playerVector.y = -1;
+               
                 playerVelocity.y = -Math.cos(this.player.rotation) * this.PLAYER_VELOCITY;
                 playerVelocity.x = Math.sin(this.player.rotation) * this.PLAYER_VELOCITY;
                 this.player.play('speed');
             } else if (cursors.down.isDown) {
                 this.SPEED_MULTIPLIER = 0.5
-                // playerVector.y = 1;
+                
                 playerVelocity.y = Math.cos(this.player.rotation) * (this.PLAYER_VELOCITY * 0.5);
                 playerVelocity.x = -Math.sin(this.player.rotation) * (this.PLAYER_VELOCITY * 0.5);
                 this.player.play('speed');
             }
 
             if (cursors.left.isDown) {
-                // playerVector.x = -1;
-                this.player.angle -= this.ROTATION_SPEED; // Rotate counter-clockwise
+
+                this.player.angle -= this.ROTATION_SPEED; 
                 this.player.play('idle-left');
                 this.player_isTurning = true;
             } else if (cursors.right.isDown) {
-                // playerVector.x = 1;
-                this.player.angle += this.ROTATION_SPEED; // Rotate clockwise
+               
+                this.player.angle += this.ROTATION_SPEED; 
                 this.player.play('idle-right');
                 this.player_isTurning = true;
             }
@@ -200,42 +197,12 @@ class Play extends Phaser.Scene {
             }
 
             this.player.setVelocity(playerVelocity.x, playerVelocity.y);
-            // playerVector.normalize();
-            // this.player.setVelocity(this.PLAYER_VELOCITY * playerVector.x, this.PLAYER_VELOCITY * playerVector.y);
-        
-        if (this.player.y > height + 100) {
-            this.gameOver();
-          }
+            
+        // if (this.player.y > height + 100) {
+            // this.gameOver();
+        //   }
     
         }
 
     }
 }
-// update() {
-//     if (this.isGameOver) return;
-
-//     let playerVelocity = new Phaser.Math.Vector2(0, 0);
-
-//     // Rotate left/right
-//     if (this.cursors.left.isDown) {
-//         this.player.angle -= this.ROTATION_SPEED; // Rotate counter-clockwise
-//     } else if (this.cursors.right.isDown) {
-//         this.player.angle += this.ROTATION_SPEED; // Rotate clockwise
-//     }
-
-//     // Move forward/backward based on the car's angle
-//     if (this.cursors.up.isDown) {
-//         playerVelocity.x = Math.cos(this.player.rotation) * this.PLAYER_VELOCITY;
-//         playerVelocity.y = Math.sin(this.player.rotation) * this.PLAYER_VELOCITY;
-//     } else if (this.cursors.down.isDown) {
-//         playerVelocity.x = -Math.cos(this.player.rotation) * (this.PLAYER_VELOCITY * 0.5);
-//         playerVelocity.y = -Math.sin(this.player.rotation) * (this.PLAYER_VELOCITY * 0.5);
-//     }
-
-//     this.player.setVelocity(playerVelocity.x, playerVelocity.y);
-
-//     if (this.player.y > this.physics.world.bounds.height + 100) {
-//         this.gameOver();
-//     }
-// }
-// }
