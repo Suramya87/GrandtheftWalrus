@@ -10,9 +10,8 @@ class Play extends Phaser.Scene {
         this.CHASE_VELOCITY = 500 / this.SPEED_MULTIPLIER;
         this.player_isTouching = false;
         this.player_isTurning = false;
+        this.ROTATION_SPEED = 2;
         this.LANES = false;
-        // this.roadPositions = [169, 410, 650, 895, 1144];
-        // this.lanePositions = [285, 530, 773, 1014];
         this.laneHeight = 960;
         this.laneWidth = 8;
         this.timeSurvived = 0;
@@ -22,19 +21,6 @@ class Play extends Phaser.Scene {
     }
 
     preload() {
-        // this.load.image('Lines', './assets/trafficLines.png');
-        // this.load.image('Strips', './assets/rumbleStrips.png');
-        // this.load.image('Black', './assets/blacktopBG.png');
-        // this.load.audio('death', './assets/STAY_IN_THE_LANE.mp3');
-        // this.load.spritesheet('cars', './assets/cars.png', {
-        //     frameWidth: 100
-        // });
-        // this.load.spritesheet('Biker', './assets/Biker.png', {
-        //     frameWidth: 100
-        // });
-        // this.load.spritesheet('COPS', './assets/POLICE2.png', {
-        //     frameWidth: 100
-        // });
         this.load.spritesheet('character', './assets/testcar2.png', {
             frameWidth: 128
         });
@@ -44,18 +30,6 @@ class Play extends Phaser.Scene {
     }
 
     create() {
-        // this.lanes = this.physics.add.group();
-        // for (let i = 0; i < this.lanePositions.length; i++) {
-        //     const lane = this.physics.add.sprite(this.lanePositions[i], 480, 'Black', 0);
-        //     lane.setSize(this.laneWidth, this.laneHeight);
-        //     lane.setImmovable(true);
-        //     this.lanes.add(lane);
-        // }
-
-        // this.black = this.add.tileSprite(0, 0, 640, 480, 'Black').setOrigin(0, 0).setScale(2);
-        // this.lines = this.add.tileSprite(0, 0, 640, 480, 'Lines').setOrigin(0, 0).setScale(2);
-        // this.strips = this.add.tileSprite(0, 0, 640, 480, 'Strips').setOrigin(0, 0).setScale(2);
-                //tilemapTiledJSON
         const map = this.add.tilemap('testJSON')
         const tileset =  map.addTilesetImage('temp_test','test')
         
@@ -67,9 +41,6 @@ class Play extends Phaser.Scene {
         
         const Walrus_spawn = map.findObject('Spawn', (obj) => obj.name === 'Walrus spawn')
         
-        // add slime
-        // this.slime = this.physics.add.sprite(slimeSpawn.x, slimeSpawn.y, 'slime', 0)
-        // this.slime.body.setCollideWorldBounds(true)
 
 
         const PLAYER = () => {
@@ -82,19 +53,6 @@ class Play extends Phaser.Scene {
             this.cooldownTime = 2000;
             this.player_isTouching = false;
 
-            // this.physics.add.overlap(this.player, this.lanes, () => {
-            //     this.player_isTouching = true;
-
-            //     if (!this.isCooldown && this.LANES) {
-            //         // this.scene.get('DA_POLICE').play('not-chillin');
-            //         this.sound.play('death', { volume: 0.1 });
-            //         console.log('death');
-            //         this.isCooldown = true;
-            //         this.time.delayedCall(this.cooldownTime, () => {
-            //             this.isCooldown = false;
-            //         });
-            //     }
-            // });
         };
         
         PLAYER();
@@ -130,34 +88,6 @@ class Play extends Phaser.Scene {
             fontFamily: 'Arial'
         });
 
-        // this.scene.launch('TRAFFIC', {
-        //     player: this.player,
-        //     roadPositions: this.roadPositions,
-        //     height: this.cameras.main.height
-        // });
-
-        // // Start the PoliceScene and pass necessary data
-        // this.scene.launch('DA_POLICE', {
-        //     player: this.player,
-        //     roadPositions: this.roadPositions,
-        //     height: this.cameras.main.height,
-        //     CHASE_VELOCITY: this.CHASE_VELOCITY,
-        //     followerSpeed: this.followerSpeed
-        // });
-
-        // // Add a key listener to spawn a cop (for testing)
-        // this.input.keyboard.on('keydown-SPACE', () => {
-        //     this.scene.get('DA_POLICE').addCop();
-        // });
-        
-        // // Spawn cops at random intervals
-        // this.time.addEvent({
-        //     delay: Phaser.Math.Between(20000, 50000), // Random delay between 2 and 5 seconds
-        //     callback: () => {
-        //         this.scene.get('DA_POLICE').addCop();
-        //         },
-        //     loop: true
-        // });
 
         this.anims.create({
             key: 'normal',
@@ -226,35 +156,31 @@ class Play extends Phaser.Scene {
                 this.player_isTouching = false;
             }
 
-            // this.strips.tilePositionY -= 2 * this.SPEED_MULTIPLIER;
-            // this.lines.tilePositionY -= 2 * this.SPEED_MULTIPLIER;
-            let playerVector = new Phaser.Math.Vector2(0, 0);
-            // playerVector.y = 0.1;
-
-            // if (!this.player_isTouching) {
-            //     this.LANES = false;
-            // }
+            // let playerVector = new Phaser.Math.Vector2(0, 0);
+            let playerVelocity = new Phaser.Math.Vector2(0, 0);
 
             if (cursors.up.isDown) {
                 this.SPEED_MULTIPLIER = 2
-                // this.strips.tilePositionY -= 4;
-                // this.lines.tilePositionY -= 4;
-                playerVector.y = -1;
+                // playerVector.y = -1;
+                playerVelocity.y = -Math.cos(this.player.rotation) * this.PLAYER_VELOCITY;
+                playerVelocity.x = Math.sin(this.player.rotation) * this.PLAYER_VELOCITY;
                 this.player.play('speed');
             } else if (cursors.down.isDown) {
                 this.SPEED_MULTIPLIER = 0.5
-                // this.strips.tilePositionY += 1;
-                // this.lines.tilePositionY += 1;
-                playerVector.y = 1;
+                // playerVector.y = 1;
+                playerVelocity.y = Math.cos(this.player.rotation) * (this.PLAYER_VELOCITY * 0.5);
+                playerVelocity.x = -Math.sin(this.player.rotation) * (this.PLAYER_VELOCITY * 0.5);
                 this.player.play('speed');
             }
 
             if (cursors.left.isDown) {
-                playerVector.x = -1;
+                // playerVector.x = -1;
+                this.player.angle -= this.ROTATION_SPEED; // Rotate counter-clockwise
                 this.player.play('idle-left');
                 this.player_isTurning = true;
             } else if (cursors.right.isDown) {
-                playerVector.x = 1;
+                // playerVector.x = 1;
+                this.player.angle += this.ROTATION_SPEED; // Rotate clockwise
                 this.player.play('idle-right');
                 this.player_isTurning = true;
             }
@@ -273,8 +199,9 @@ class Play extends Phaser.Scene {
                 this.LANES = true;
             }
 
-            playerVector.normalize();
-            this.player.setVelocity(this.PLAYER_VELOCITY * playerVector.x, this.PLAYER_VELOCITY * playerVector.y);
+            this.player.setVelocity(playerVelocity.x, playerVelocity.y);
+            // playerVector.normalize();
+            // this.player.setVelocity(this.PLAYER_VELOCITY * playerVector.x, this.PLAYER_VELOCITY * playerVector.y);
         
         if (this.player.y > height + 100) {
             this.gameOver();
@@ -284,3 +211,31 @@ class Play extends Phaser.Scene {
 
     }
 }
+// update() {
+//     if (this.isGameOver) return;
+
+//     let playerVelocity = new Phaser.Math.Vector2(0, 0);
+
+//     // Rotate left/right
+//     if (this.cursors.left.isDown) {
+//         this.player.angle -= this.ROTATION_SPEED; // Rotate counter-clockwise
+//     } else if (this.cursors.right.isDown) {
+//         this.player.angle += this.ROTATION_SPEED; // Rotate clockwise
+//     }
+
+//     // Move forward/backward based on the car's angle
+//     if (this.cursors.up.isDown) {
+//         playerVelocity.x = Math.cos(this.player.rotation) * this.PLAYER_VELOCITY;
+//         playerVelocity.y = Math.sin(this.player.rotation) * this.PLAYER_VELOCITY;
+//     } else if (this.cursors.down.isDown) {
+//         playerVelocity.x = -Math.cos(this.player.rotation) * (this.PLAYER_VELOCITY * 0.5);
+//         playerVelocity.y = -Math.sin(this.player.rotation) * (this.PLAYER_VELOCITY * 0.5);
+//     }
+
+//     this.player.setVelocity(playerVelocity.x, playerVelocity.y);
+
+//     if (this.player.y > this.physics.world.bounds.height + 100) {
+//         this.gameOver();
+//     }
+// }
+// }
