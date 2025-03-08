@@ -24,9 +24,12 @@ class Play extends Phaser.Scene {
         this.load.image('test', './assets/kidnap.png');
         this.load.tilemapTiledJSON('testJSON', './assets/temp_test.json');
         this.load.spritesheet('COPS', './assets/POLICE2.png', { frameWidth: 100 });
+
+        this.load.audio('death', './assets/rumblestripSound.wav'); 
     }
 
     create() {
+        this.death = this.sound.add('death');
         const map = this.add.tilemap('testJSON');
         const tileset = map.addTilesetImage('temp_test', 'test');
         const bgLayer = map.createLayer('BG',tileset,0,0)
@@ -175,7 +178,8 @@ class Play extends Phaser.Scene {
                 this.activeCops.splice(index, 1); // Remove from array
             }
             cop.destroy(); // Destroy sprite
-            console.log("Cop eliminated!");
+            this.death.play();
+            console.log("get gotten");
         }
     }
     
