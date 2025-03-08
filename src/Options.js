@@ -5,28 +5,112 @@ class Options extends Phaser.Scene {
 
     preload(){
         this.load.path = './assets/'
-        this.load.image('road', 'sidewalkhigh.png')
         this.load.image('offbutton', 'selectbuttoff.png')
         this.load.image('onbutton', 'selectbutton.png')
-        this.load.image('background', 'shaded background.png')
+        this.load.image('off', 'settingSelector1.png')
+        this.load.image('on', 'settingSelector2.png')
+        this.load.image('back', 'asset 11.png')
+
 
     }
 
     create(){
-        this.HIGHWAY = this.add.tileSprite(0, 0, 1920, 1080, 'road').setOrigin(0,0)
-        this.HIGHWAY.setScale(2)
-        this.background = this.add.tileSprite(0, 0, 640, 480, 'background').setOrigin(0,0)
-        this.background.setScale(2)
-
-
+        //PAUSE MENU EXAMPLE START HERE----------------------------------------------------------------------------------------
         // Title
-        this.add.text(game.config.width / 2, 50, "OPTIONS", {
+        this.backGROUND = this.add.image(game.config.width / 2, game.config.height / 2 - 150,'back')
+        this.backGROUND.setScale(3,2)
+        this.add.text(game.config.width / 2, 100, "OPTIONS", {
             fontFamily: "Orbitron",
             fontSize: "50px",
             color: "#FFFFFF",
         }).setOrigin(0.5);
+        //----------------------------------------------------------------------------------------------------
+        //sound control
+        // SFX Volume Label
+        this.add.text(game.config.width / 4, 165, "SFX Volume", {
+            fontFamily: "Orbitron",
+            fontSize: "24px",
+            color: "#FFFFFF",
+        });
 
-        let backButton = this.add.image(game.config.width / 2, game.config.height / 2 + 350, 'offbutton') // Default button image
+        // Music Volume Label
+        this.add.text(game.config.width / 4, 265, "Music Volume", {
+            fontFamily: "Orbitron",
+            fontSize: "24px",
+            color: "#FFFFFF",
+        });
+
+        // Slider Graphics
+        let sfxBar = this.add.rectangle(game.config.width / 2, 180, 200, 10, 0x555555);
+        let sfxKnob = this.add.rectangle(game.config.width / 2, 180, 20, 20, 0xFFFFFF).setInteractive();
+
+        let musicBar = this.add.rectangle(game.config.width / 2, 280, 200, 10, 0x555555);
+        let musicKnob = this.add.rectangle(game.config.width / 2, 280, 20, 20, 0xFFFFFF).setInteractive();
+
+        // Make Sliders Draggable
+        this.input.setDraggable(sfxKnob);
+        this.input.setDraggable(musicKnob);
+
+        this.input.on("drag", (pointer, obj, dragX) => {
+            if (obj === sfxKnob) {
+                obj.x = Phaser.Math.Clamp(dragX, sfxBar.x - 100, sfxBar.x + 100);
+                gameSettings.sfxVolume = (obj.x - (sfxBar.x - 100)) / 200; // Normalize between 0-1
+                
+                // Set volume for all sound effects
+                if (gameSettings.sfx) {
+                    gameSettings.sfx.setVolume(gameSettings.sfxVolume);
+                }
+            }
+            
+            if (obj === musicKnob) {
+                obj.x = Phaser.Math.Clamp(dragX, musicBar.x - 100, musicBar.x + 100);
+                gameSettings.musicVolume = (obj.x - (musicBar.x - 100)) / 200; // Normalize between 0-1
+        
+                // Set volume only for music, NOT global sound
+                if (gameSettings.music) {
+                    gameSettings.music.setVolume(gameSettings.musicVolume);
+                }
+            }
+        });
+        //----------------------------------------------------------------------------------------------------
+        // Auto Aim Mode Checkbox
+        let autoAimCheckbox = this.add.sprite(game.config.width / 2, 400, 'off').setInteractive();
+        // Create label for Auto Aim
+        this.add.text(game.config.width / 4, 380, "Auto Aim Mode", {
+            fontFamily: "Orbitron",
+            fontSize: "24px",
+            color: "#FFFFFF",
+        });
+
+        // Toggle the checkbox when clicked
+        autoAimCheckbox.on('pointerdown', () => {
+            // Toggle the state of Auto Aim
+            gameSettings.autoAim = !gameSettings.autoAim; // Switch between true and false
+            
+            // Update the texture based on the new state
+            autoAimCheckbox.setTexture(gameSettings.autoAim ? 'on' : 'off');
+        });
+        //----------------------------------------------------------------------------------------------------
+        // Custom Sounds Checkbox
+        let customSoundsCheckbox = this.add.sprite(game.config.width / 2, 500, 'off').setInteractive();
+        // Create label for Auto Aim
+        this.add.text(game.config.width / 4, 480, "Custom Sounds:", {
+            fontFamily: "Orbitron",
+            fontSize: "24px",
+            color: "#FFFFFF",
+        });
+
+        // Toggle the checkbox when clicked
+        customSoundsCheckbox.on('pointerdown', () => {
+            // Toggle the state of Auto Aim
+            gameSettings.customSounds = !gameSettings.customSounds; // Switch between true and false
+            
+            // Update the texture based on the new state
+            customSoundsCheckbox.setTexture(gameSettings.customSounds ? 'on' : 'off');
+        });
+        //----------------------------------------------------------------------------------------------------
+        //buttons
+        let backButton = this.add.image(game.config.width / 2, game.config.height / 2 + 250, 'offbutton') // Default button image
         .setOrigin(0.5)
         .setScale(2)
         .setInteractive()
@@ -45,9 +129,9 @@ class Options extends Phaser.Scene {
             fontSize: '40px',
             color: '#000000'
         }).setOrigin(0.5);
-
+        //END OF PAUSE MENU
+        //----------------------------------------------------------------------------------------------------
     }
     update(){
-        this.HIGHWAY.tilePositionY -= .5
 }
 }

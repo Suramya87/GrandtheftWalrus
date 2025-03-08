@@ -4,23 +4,25 @@ class Menu extends Phaser.Scene {
     }
     preload(){
         this.load.path = './assets/'
-        this.load.image('road', 'sidewalkhigh.png')
         this.load.image('logo', 'GTW logo.png')
         this.load.image('offbutton', 'selectbuttoff.png')
         this.load.image('onbutton', 'selectbutton.png')
-        this.load.image('background', 'shaded background.png')
+        this.load.audio('vicecity', 'vice-city-vibes-grand-theft-auto-style-soundtrack-301060.mp3')
 
     }
 
     create(){
-        this.HIGHWAY = this.add.tileSprite(0, 0, 1920, 1080, 'road').setOrigin(0,0)
-        this.HIGHWAY.setScale(2)
-        this.background = this.add.tileSprite(0, 0, 640, 480, 'background').setOrigin(0,0)
-        this.background.setScale(2)
-
-        this.logo = this.add.image(this.cameras.main.width / 2, this.cameras.main.height / 2, 'logo');
-        this.logo.setScale(2)
-
+        if (!gameSettings.music) {
+            gameSettings.music = this.sound.add("vicecity", { 
+                volume: gameSettings.musicVolume, 
+                loop: true 
+            });
+            gameSettings.music.play();
+        }
+    
+        // LOGO
+        this.logo = this.add.image(this.cameras.main.width / 2, this.cameras.main.height / 2, 'logo')
+            .setScale(2);
         let playButton = this.add.image(game.config.width / 2, game.config.height / 2 + 150, 'offbutton') // Default button image
         .setOrigin(0.5)
         .setScale(2)
@@ -84,6 +86,5 @@ class Menu extends Phaser.Scene {
     
 
     update(){
-            this.HIGHWAY.tilePositionY -= .5
     }
 }

@@ -5,19 +5,15 @@ class Credits extends Phaser.Scene {
 
     preload(){
         this.load.path = './assets/'
-        this.load.image('road', 'sidewalkhigh.png')
         this.load.image('offbutton', 'selectbuttoff.png')
         this.load.image('onbutton', 'selectbutton.png')
-        this.load.image('background', 'shaded background.png')
+        
+
 
     }
 
     create(){
-        this.HIGHWAY = this.add.tileSprite(0, 0, 1920, 1080, 'road').setOrigin(0,0)
-        this.HIGHWAY.setScale(2)
-        this.background = this.add.tileSprite(0, 0, 640, 480, 'background').setOrigin(0,0)
-        this.background.setScale(2)
-
+        
         // Title
         this.add.text(game.config.width / 2, 100, "CREDITS", {
             fontFamily: "Orbitron",
@@ -33,6 +29,7 @@ class Credits extends Phaser.Scene {
                   ART:
             SOUND: 
        IDEATION:
+             MUSIC:
 
         `;
 
@@ -43,15 +40,16 @@ class Credits extends Phaser.Scene {
        Samuel Webster
           Samuel / Suramya
           Samuel / Suramya
+DeltaX-Music
         `;
 
-        this.add.text(game.config.width / 2+100,300, namesText, {
+        this.add.text(game.config.width / 2+165,310, namesText, {
             fontFamily: "Orbitron",
             fontSize: "40px",
             color: "#FFFFFF",
             align: "center"
         }).setOrigin(0.5);
-        this.add.text(game.config.width / 2 - 150,325, creditsText, {
+        this.add.text(game.config.width / 2 - 165,335, creditsText, {
             fontFamily: "Orbitron",
             fontSize: "40px",
             color: "#FFFFFF",
@@ -80,6 +78,5 @@ class Credits extends Phaser.Scene {
         }).setOrigin(0.5);
     }
     update(){
-        this.HIGHWAY.tilePositionY -= .5
 }
 }

@@ -9,6 +9,14 @@
 // }
 
 // let game = new Phaser.Game(config)
+let gameSettings = {
+  sfxVolume: 1,  // Default max volume
+  musicVolume: 1,
+  music: null, // To store persistent music
+  background: null, // Store background reference
+  autoaim: false,
+  customSounds: false
+};
 
 let config = {
     type: Phaser.AUTO,
@@ -27,9 +35,12 @@ let config = {
             debug: true,
         },
     },
+    
     zoom:1,
-    scene: [Menu, Credits, Options, Play, GameOver, COPS, TRAFFIC]
+
+    scene: [backgroundScene, Menu, Credits, Options, Play, GameOver, COPS, TRAFFIC, ]
   }
+
 
 let game = new Phaser.Game(config)
 let cursors

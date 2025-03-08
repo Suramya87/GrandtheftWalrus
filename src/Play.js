@@ -26,9 +26,26 @@ class Play extends Phaser.Scene {
         this.load.spritesheet('COPS', './assets/POLICE2.png', { frameWidth: 100 });
 
         this.load.audio('death', './assets/rumblestripSound.wav'); 
+
+        this.load.image('off', './assets/settingSelector1.png')
+        this.load.image('on', './assets/settingSelector2.png')
+        this.load.image('back', './assets/asset 11.png')
+        this.load.image('X', './assets/Xbutt.png')
+        this.load.image('pause', './assets/pause.png')
+        this.load.image('offbutton', './assets/selectbuttoff.png')
+        this.load.image('onbutton', './assets/selectbutton.png')
+        this.load.image('unpause', './assets/unpause.png')
+
+
     }
 
     create() {
+        this.scene.setVisible(false, "backgroundScene"); // Hide the background scene
+        if (gameSettings.music) {
+            gameSettings.music.stop(); // Stops the music
+        }
+
+
         this.death = this.sound.add('death');
         const map = this.add.tilemap('testJSON');
         const tileset = map.addTilesetImage('temp_test', 'test');
@@ -127,8 +144,8 @@ class Play extends Phaser.Scene {
             repeat: -1,
             frames: this.anims.generateFrameNumbers('COPS', { start: 5, end: 5 })
         });
-    }
 
+    }
     spawnCop() {
         if (this.enemySpawns.length === 0) {
             console.warn("No police");
@@ -186,6 +203,7 @@ class Play extends Phaser.Scene {
     
 
     update() {
+
         //player
         if (!this.player.destroyed) {
             let playerVelocity = new Phaser.Math.Vector2(0, 0);
