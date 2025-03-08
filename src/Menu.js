@@ -14,14 +14,16 @@ class Menu extends Phaser.Scene {
 
     create(){
         this.HIGHWAY = this.add.tileSprite(0, 0, 1920, 1080, 'road').setOrigin(0,0)
-        this.HIGHWAY.setScale(0.5)
+        this.HIGHWAY.setScale(2)
         this.background = this.add.tileSprite(0, 0, 640, 480, 'background').setOrigin(0,0)
-        this.logo = this.add.image(this.cameras.main.width / 2, this.cameras.main.height / 2, 'logo');
-        this.logo.setScale(0.5)
+        this.background.setScale(2)
 
-        let playButton = this.add.image(game.config.width / 2, game.config.height / 2 + 40, 'offbutton') // Default button image
+        this.logo = this.add.image(this.cameras.main.width / 2, this.cameras.main.height / 2, 'logo');
+        this.logo.setScale(2)
+
+        let playButton = this.add.image(game.config.width / 2, game.config.height / 2 + 150, 'offbutton') // Default button image
         .setOrigin(0.5)
-        .setScale(0.5)
+        .setScale(2)
         .setInteractive()
         .on('pointerover', () => {
             playButton.setTexture('onbutton'); // Change to hover image
@@ -33,9 +35,9 @@ class Menu extends Phaser.Scene {
             this.scene.start('playScene'); // Start the game when clicked
         });
 
-        let optionsbutton = this.add.image(game.config.width / 2, game.config.height / 2 + 70, 'offbutton') // Default button image
+        let optionsbutton = this.add.image(game.config.width / 2, game.config.height / 2 + 250, 'offbutton') // Default button image
         .setOrigin(0.5)
-        .setScale(0.5)
+        .setScale(2)
         .setInteractive()
         .on('pointerover', () => {
             optionsbutton.setTexture('onbutton'); // Change to hover image
@@ -47,9 +49,9 @@ class Menu extends Phaser.Scene {
             this.scene.start('optionsScene'); // Start the game when clicked
         });
 
-        let creditsbutton = this.add.image(game.config.width / 2, game.config.height / 2 + 100, 'offbutton') // Default button image
+        let creditsbutton = this.add.image(game.config.width / 2, game.config.height / 2 + 350, 'offbutton') // Default button image
         .setOrigin(0.5)
-        .setScale(0.5)
+        .setScale(2)
         .setInteractive()
         .on('pointerover', () => {
             creditsbutton.setTexture('onbutton'); // Change to hover image
@@ -64,17 +66,17 @@ class Menu extends Phaser.Scene {
 
         let playText = this.add.text(playButton.x, playButton.y, 'PLAY', {
             fontFamily: 'Orbitron',
-            fontSize: '15px',
+            fontSize: '35px',
             color: '#000000'
         }).setOrigin(0.5);
         let optionText = this.add.text(optionsbutton.x, optionsbutton.y, 'OPTIONS', {
             fontFamily: 'Orbitron',
-            fontSize: '11px',
+            fontSize: '32px',
             color: '#000000'
         }).setOrigin(0.5);
         let creditText = this.add.text(creditsbutton.x, creditsbutton.y, 'CREDITS', {
             fontFamily: 'Orbitron',
-            fontSize: '11px',
+            fontSize: '32px',
             color: '#000000'
         }).setOrigin(0.5);
 
