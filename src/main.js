@@ -28,7 +28,7 @@ let config = {
         },
     },
     zoom:5,
-    scene: [ Play ,GameOver, COPS, TRAFFIC]
+    scene: [Menu, Credits, Options, Play, GameOver, COPS, TRAFFIC]
   }
 
 let game = new Phaser.Game(config)
