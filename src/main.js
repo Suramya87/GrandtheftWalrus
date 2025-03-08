@@ -12,12 +12,12 @@
 
 let config = {
     type: Phaser.AUTO,
-    width: 320,
-    height: 240,
+    // width: 480,
+    // height: 360,
     // width: 640,
     // height: 480,
-    // width: 1280,
-    // height: 960,
+    width: 1280,
+    height: 960,
     render:{
       pixelArt: true
     },
@@ -27,7 +27,7 @@ let config = {
             debug: true,
         },
     },
-    zoom:5,
+    zoom:1,
     scene: [Menu, Credits, Options, Play, GameOver, COPS, TRAFFIC]
   }
 
