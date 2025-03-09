@@ -10,7 +10,7 @@ class Play extends Phaser.Scene {
         this.CHASE_VELOCITY = 200 / this.SPEED_MULTIPLIER;
         this.player_isTouching = false;
         this.player_isTurning = false;
-        this.ROTATION_SPEED = 2;
+        this.ROTATION_SPEED = 3;
         this.LANES = false;
         this.timeSurvived = 0;
         this.highScore = localStorage.getItem('highScore') || 0;
@@ -35,6 +35,7 @@ class Play extends Phaser.Scene {
         this.load.image('offbutton', './assets/selectbuttoff.png')
         this.load.image('onbutton', './assets/selectbutton.png')
         this.load.image('unpause', './assets/unpause.png')
+        this.load.image('star', './assets/star.png')
 
 
     }
@@ -54,17 +55,19 @@ class Play extends Phaser.Scene {
         this.KILLLayer = map.createLayer('KILL', tileset, 0, 0);
 
         this.footpathLayer.setCollisionByProperty({ collides: true });
-        this.KILLLayer.setCollisionByProperty({ collides: true });
+        // this.KILLLayer.setCollisionByProperty({ collides: true });
 
     
         this.enemySpawns = map.getObjectLayer('COPS').objects;
 
       
         const Walrus_spawn = map.findObject('Spawn', (obj) => obj.name === 'Walrus spawn');
-        this.player = this.physics.add.sprite(Walrus_spawn.x, Walrus_spawn.y, 'character', 1).setScale(0.5);
+        this.player = this.physics.add.sprite(Walrus_spawn.x, Walrus_spawn.y, 'character', 1).setScale(0.25);
         this.player.body.setCollideWorldBounds(true);
         this.player.setSize(56, 64);
-        this.player.body.setBounce(2);
+        this.player.body.setBounce(0.1);
+        this.player.body.setDrag(200);
+        this.player.body.setFriction(-10);
         this.isCooldown = false;
         this.cooldownTime = 2000;
 
@@ -77,9 +80,10 @@ class Play extends Phaser.Scene {
         this.physics.add.collider(this.player, this.footpathLayer);
 
       
-        this.input.keyboard.on('keydown-SPACE', () => {
+        this.input.keyboard.on('keydown-P', () => {
             this.spawnCop();
         });
+        this.spaceKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
 
  
         this.cursors = this.input.keyboard.createCursorKeys();
@@ -158,7 +162,7 @@ class Play extends Phaser.Scene {
     
         console.log(`WOOPWOOP: (${spawnX}, ${spawnY})`);
     
-        const cop = this.physics.add.sprite(spawnX, spawnY, 'COPS', 0).setScale(0.5).setDepth(10);
+        const cop = this.physics.add.sprite(spawnX, spawnY, 'COPS', 0).setScale(0.25).setDepth(10);
         cop.setSize(56, 64);
         cop.setAngle(Phaser.Math.Between(0, 360));
         cop.setCollideWorldBounds(true);
@@ -204,39 +208,76 @@ class Play extends Phaser.Scene {
 
     update() {
 
-        //player
-        if (!this.player.destroyed) {
-            let playerVelocity = new Phaser.Math.Vector2(0, 0);
+        if (!this.player || this.isGameOver) return;
 
-            if (this.cursors.up.isDown) {
-                this.SPEED_MULTIPLIER = 2;
-                playerVelocity.y = -Math.cos(this.player.rotation) * this.PLAYER_VELOCITY;
-                playerVelocity.x = Math.sin(this.player.rotation) * this.PLAYER_VELOCITY;
-                this.player.play('speed');
+        let forward = new Phaser.Math.Vector2(
+            Math.sin(this.player.rotation),
+            -Math.cos(this.player.rotation)
+        );
+    
+        let acceleration = 10;  
+        let maxSpeed = 500;     
+        let deceleration = 0.99; 
+        let reverseSpeed = 150;  
+        let turnSpeed = 3;      
+        let driftFactor = 0.05; 
+        
+        if (this.spaceKey.isDown){
+            acceleration = 0;  
+            maxSpeed = 400;     
+            deceleration = 0.00000001; 
+            reverseSpeed = 150;  
+            turnSpeed = 4;      
+            driftFactor = 0.96; 
 
-            } else if (this.cursors.down.isDown) {
-                this.SPEED_MULTIPLIER = 0.5;
-                playerVelocity.y = Math.cos(this.player.rotation) * (this.PLAYER_VELOCITY * 0.5);
-                playerVelocity.x = -Math.sin(this.player.rotation) * (this.PLAYER_VELOCITY * 0.5);
-                this.player.play('speed');
+        
+    }
+
+        let velocity = new Phaser.Math.Vector2(this.player.body.velocity.x, this.player.body.velocity.y);
+
+        if (this.cursors.up.isDown) {
+            velocity.x += forward.x * acceleration;
+            velocity.y += forward.y * acceleration;
+    
+            if (velocity.length() > maxSpeed) {
+                velocity.setLength(maxSpeed);
             }
-
-            if (this.cursors.left.isDown) {
-                this.player.angle -= this.ROTATION_SPEED;
-                this.player.play('idle-left');
-            } else if (this.cursors.right.isDown) {
-                this.player.angle += this.ROTATION_SPEED;
-                this.player.play('idle-right');
+            this.player.play('speed');
+        } 
+        else if (this.cursors.down.isDown) {
+            velocity.x -= forward.x * (acceleration * 1.5);
+            velocity.y -= forward.y * (acceleration * 1.5);
+    
+            if (velocity.length() > reverseSpeed) {
+                velocity.setLength(reverseSpeed);
             }
-
-            if (!this.cursors.left.isDown && !this.cursors.right.isDown && !this.cursors.up.isDown && !this.cursors.down.isDown) {
-                this.player_isTurning = false;
-                this.player.play('normal');
-            }
-
-
-            this.player.setVelocity(playerVelocity.x, playerVelocity.y);
+            this.player.play('speed');
         }
+        else {
+            velocity.scale(deceleration); 
+        }
+    
+        if (this.cursors.left.isDown) {
+            this.player.angle -= turnSpeed;
+            this.player.play('idle-left');
+        } 
+        else if (this.cursors.right.isDown) {
+            this.player.angle += turnSpeed;
+            this.player.play('idle-right');
+        }
+    
+        // drifting velocity
+        
+        let newForward = new Phaser.Math.Vector2(Math.sin(this.player.rotation),-Math.cos(this.player.rotation));
+        velocity.lerp(newForward.scale(velocity.length()), 1 - driftFactor);
+    
+        this.player.body.velocity.set(velocity.x, velocity.y);
+    
+        if (!this.cursors.left.isDown && !this.cursors.right.isDown && !this.cursors.up.isDown && !this.cursors.down.isDown) {
+            this.player.play('normal');
+        }
+
+
 
 
         for (let i = this.activeCops.length - 1; i >= 0; i--) {
