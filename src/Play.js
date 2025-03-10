@@ -36,6 +36,7 @@ class Play extends Phaser.Scene {
         this.load.image('onbutton', './assets/selectbutton.png')
         this.load.image('unpause', './assets/unpause.png')
         this.load.image('star', './assets/star.png')
+        this.load.image('smoke', './assets/smoke.png')
 
 
     }
@@ -64,7 +65,8 @@ class Play extends Phaser.Scene {
         const Walrus_spawn = map.findObject('Spawn', (obj) => obj.name === 'Walrus spawn');
         this.player = this.physics.add.sprite(Walrus_spawn.x, Walrus_spawn.y, 'character', 1).setScale(0.25);
         this.player.body.setCollideWorldBounds(true);
-        this.player.setSize(56, 64);
+        this.player.setSize(48, 48);
+        this.player.setCircle(24);
         this.player.body.setBounce(0.1);
         this.player.body.setDrag(200);
         this.player.body.setFriction(-10);
@@ -79,8 +81,34 @@ class Play extends Phaser.Scene {
         
         this.physics.add.collider(this.player, this.footpathLayer);
 
-      
+        this.driftParticles = this.add.particles(0, 0, 'smoke', {
+            speed: { min: 10, max: 50 },
+            scale: { start: 0.5, end: 0 },
+            alpha: { start: 0.8, end: 0 },
+            lifespan: 500,
+            frequency: 10,
+            blendMode: 'ADD'
+        });
+    
+        this.driftParticles.setDepth(5);
+        this.driftParticles.setScrollFactor(1);
+        this.driftParticles.stop();
+
+        this.input.keyboard.on('keydown-O', () => {
+            if (this.starLevel < this.maxStars) {
+                this.starLevel++;
+                this.updateStars();
+            }
+        });
+
+        this.input.keyboard.on('keydown-I', () => {
+            if (this.starLevel > 1) {
+                this.starLevel--;
+                this.updateStars();
+            }
+        });
         this.input.keyboard.on('keydown-P', () => {
+            // this.starLevel++;
             this.spawnCop();
         });
         this.spaceKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
@@ -149,6 +177,22 @@ class Play extends Phaser.Scene {
             frames: this.anims.generateFrameNumbers('COPS', { start: 5, end: 5 })
         });
 
+        this.startTime = this.time.now;  
+        this.starLevel = 1;  
+        this.maxStars = 7;   
+        this.starUpdateTime = 5000; 
+    
+        // Get camera viewport size considering zoom
+    
+        // UI elements (scaled & positioned for zoom)
+        this.timerText = this.add.text(435, 350, 'Time: 0s', { 
+            fontSize: '18px', 
+            fill: '#fff' 
+        }).setScrollFactor(0).setDepth(100);
+    
+        this.starGroup = this.add.group();
+        this.updateStars();
+
     }
     spawnCop() {
         if (this.enemySpawns.length === 0) {
@@ -162,18 +206,19 @@ class Play extends Phaser.Scene {
     
         console.log(`WOOPWOOP: (${spawnX}, ${spawnY})`);
     
-        const cop = this.physics.add.sprite(spawnX, spawnY, 'COPS', 0).setScale(0.25).setDepth(10);
+        const cop = this.physics.add.sprite(spawnX, spawnY, 'COPS', 0).setScale(0.25).setDepth(10).setAngle(60);
         cop.setSize(56, 64);
         cop.setAngle(Phaser.Math.Between(0, 360));
         cop.setCollideWorldBounds(true);
         cop.body.setDrag(200);
         cop.body.setFriction(0.1);
+        cop.body.setBounce(2)
     
         this.physics.add.collider(cop, this.footpathLayer, () => {
             console.log("BOOP");
         });
         
-        // Add collision between cop and KILL layer
+
         this.physics.add.collider(cop, this.KILLLayer, () => {
             this.destroyCop(cop);
         });
@@ -196,9 +241,9 @@ class Play extends Phaser.Scene {
         if (cop && cop.active) {
             const index = this.activeCops.indexOf(cop);
             if (index > -1) {
-                this.activeCops.splice(index, 1); // Remove from array
+                this.activeCops.splice(index, 1); 
             }
-            cop.destroy(); // Destroy sprite
+            cop.destroy(); 
             this.death.play();
             console.log("get gotten");
         }
@@ -207,6 +252,21 @@ class Play extends Phaser.Scene {
     
 
     update() {
+
+        if (this.isGameOver) return;
+
+        let elapsedTime = Math.floor((this.time.now - this.startTime) / 1000);
+        this.timerText.setText(`Time: ${elapsedTime}s`);
+    
+        // if (elapsedTime % (this.starUpdateTime / 1000) === 0 && this.starLevel < this.maxStars) {
+        //     this.starLevel++;
+        //     this.updateStars();
+        // }
+        if (elapsedTime >= this.lastStarTime + 10 && this.starLevel < this.maxStars) {
+            this.starLevel++;
+            this.updateStars();
+            this.lastStarTime = elapsedTime;
+        }
 
         if (!this.player || this.isGameOver) return;
 
@@ -217,7 +277,8 @@ class Play extends Phaser.Scene {
     
         let acceleration = 10;  
         let maxSpeed = 500;     
-        let deceleration = 0.99; 
+        // let deceleration = 0.99; 
+        let deceleration = 1;
         let reverseSpeed = 150;  
         let turnSpeed = 3;      
         let driftFactor = 0.05; 
@@ -225,7 +286,9 @@ class Play extends Phaser.Scene {
         if (this.spaceKey.isDown){
             acceleration = 0;  
             maxSpeed = 400;     
-            deceleration = 0.00000001; 
+            // deceleration = 0.00000001; 
+            deceleration = 0.8;
+
             reverseSpeed = 150;  
             turnSpeed = 4;      
             driftFactor = 0.96; 
@@ -245,11 +308,11 @@ class Play extends Phaser.Scene {
             this.player.play('speed');
         } 
         else if (this.cursors.down.isDown) {
-            velocity.x -= forward.x * (acceleration * 1.5);
-            velocity.y -= forward.y * (acceleration * 1.5);
+            velocity.x += -forward.x * acceleration;
+            velocity.y += -forward.y * acceleration;
     
-            if (velocity.length() > reverseSpeed) {
-                velocity.setLength(reverseSpeed);
+            if (velocity.length() > maxSpeed) {
+                velocity.setLength(maxSpeed);
             }
             this.player.play('speed');
         }
@@ -267,7 +330,7 @@ class Play extends Phaser.Scene {
         }
     
         // drifting velocity
-        
+
         let newForward = new Phaser.Math.Vector2(Math.sin(this.player.rotation),-Math.cos(this.player.rotation));
         velocity.lerp(newForward.scale(velocity.length()), 1 - driftFactor);
     
@@ -277,6 +340,22 @@ class Play extends Phaser.Scene {
             this.player.play('normal');
         }
 
+        // let isDrifting = Math.abs(velocity.angle() - this.player.rotation) > 0.2; // Checks if turning
+        let isDrifting = this.spaceKey.isDown;
+        let isFast = velocity.length() > 100; 
+        if (isDrifting) {
+            console.log("drift")
+        }
+    
+        if (isDrifting && isFast) {
+            this.driftParticles.start();
+            this.driftParticles.emitParticleAt(
+                this.player.x - Math.sin(this.player.rotation) * 20,
+                this.player.y + Math.cos(this.player.rotation) * 20
+            );
+        } else {
+            this.driftParticles.stop();
+        }
 
 
 
@@ -285,14 +364,35 @@ class Play extends Phaser.Scene {
 
             if (!this.player) continue;
 
-            let targetAngle = Phaser.Math.Angle.Between(cop.x, cop.y, this.player.x, this.player.y);
             //dumbass cops at the moment but they will be breaking ankles at 5 stars
-            cop.rotation = Phaser.Math.Angle.RotateTo(cop.rotation, targetAngle, 0.013);
 
-            const speed = this.CHASE_VELOCITY;
+            if (!cop.lastTurnTime || this.time.now > cop.lastTurnTime + (50 / (this.starLevel + 1))) {
+                let targetAngle = Phaser.Math.Angle.Between(cop.x, cop.y, this.player.x, this.player.y);
+                cop.rotation = Phaser.Math.Angle.RotateTo(cop.rotation, targetAngle, 0.05 * this.starLevel + 0.01);
+                cop.lastTurnTime = this.time.now;
+            }
+
+            const speed = this.CHASE_VELOCITY + (this.CHASE_VELOCITY * (this.starLevel/20 ));
             cop.setVelocity(Math.cos(cop.rotation) * speed, Math.sin(cop.rotation) * speed);
 
             cop.play('not-chillin');
         }
+        
     }
+
+
+updateStars() {
+    this.starGroup.clear(true, true);
+    // this.starLevel++;
+
+
+    for (let i = 0; i < this.starLevel; i++) {
+        let star = this.add.image(440 + i * 12, 340, 'star')
+            .setScale(0.3) // Adjust scale for zoom
+            .setScrollFactor(0)
+            .setDepth(100);
+        this.starGroup.add(star);
+         }
+    }
+
 }
