@@ -20,6 +20,6 @@ class backgroundScene extends Phaser.Scene {
     }
 
     update() {
-        this.HIGHWAY.tilePositionY += .5; // Scroll faster
+        this.HIGHWAY.tilePositionY -= .5; // Scroll faster
     }
 }
