@@ -22,6 +22,7 @@ class Play extends Phaser.Scene {
         this.maxAmmo = 5;
         this.reloadTime = 2000;
         this.isReloading = false;
+        this.ammoUI = [];
     }
 
     preload() {
@@ -44,6 +45,7 @@ class Play extends Phaser.Scene {
         this.load.image('smoke', './assets/smoke.png')
         this.load.image('bullet', './assets/bullet.png');
         this.load.image('ammo_ui', './assets/shotgunshell.png');
+        this.load.image('cone', './assets/cone.png');
 
 
     }
@@ -84,12 +86,14 @@ class Play extends Phaser.Scene {
         this.isCooldown = false;
         this.cooldownTime = 2000;
 
+        this.aimCone = this.add.sprite(this.player.x, this.player.y, 'cone').setOrigin(0.5, 0.5).setDepth(5).setScale(0.25).setAlpha(0.5);
+
         //Carmera shit
         this.cameras.main.startFollow(this.player, false, 0.5, 0.5);
         this.cameras.main.setZoom(1);
 
         this.input.keyboard.on('keydown-Z', () => {
-            this.cameras.main.setZoom(this.cameras.main.zoom === 1 ? 3 : 1);
+            this.cameras.main.setZoom(this.cameras.main.zoom === 3 ? 1 : 3);
         });
 
         this.physics.world.setBounds(0, 0, map.widthInPixels, map.heightInPixels);
@@ -129,6 +133,11 @@ class Play extends Phaser.Scene {
         });
 
         this.input.keyboard.on('keydown-X', () => this.fireShotgun());
+        this.input.on('pointerdown', (pointer) => {
+            if (pointer.button === 0) {  // 0 = Left Click, 1 = Middle Click, 2 = Right Click
+                this.fireShotgun();
+            }
+        });
         this.input.keyboard.on('keydown-T', () => this.toggleAutoAim()); // Toggle auto-aim
         this.createAmmoUI();
 
@@ -136,6 +145,14 @@ class Play extends Phaser.Scene {
 
  
         this.cursors = this.input.keyboard.createCursorKeys();
+
+        this.keys = this.input.keyboard.addKeys({
+            up: Phaser.Input.Keyboard.KeyCodes.W,
+            down: Phaser.Input.Keyboard.KeyCodes.S,
+            left: Phaser.Input.Keyboard.KeyCodes.A,
+            right: Phaser.Input.Keyboard.KeyCodes.D
+        });
+        
 
         this.anims.create({
             key: 'normal',
@@ -215,11 +232,6 @@ class Play extends Phaser.Scene {
         this.updateStars();
         console.log(this.bullets)
 
-        // this.physics.add.collider(this.activeCops, this.bullets, (cop, bullet) => {
-        //     this.destroyCop(cop); 
-        //     bullet.destroy(); 
-        //     console.log("sdfgh")
-        // });
 
     }
 
@@ -230,7 +242,7 @@ class Play extends Phaser.Scene {
     }
 
     createAmmoUI() {
-        this.ammoUI = [];
+        // this.ammoUI = [];
         for (let i = 0; i < this.maxAmmo; i++) {
             let bulletIcon = this.add.image(450 + i * 20, 600, 'ammo_ui')
                 .setScale(0.5)
@@ -240,61 +252,68 @@ class Play extends Phaser.Scene {
     }
 
     fireShotgun() {
-
         if (this.isReloading || this.ammo <= 0) return;
-
+    
         this.ammo--;
         this.updateAmmoUI();
-
-        let numPellets = 7;
-        let spreadAngle = 20;
-        let targetAngle = this.player.rotation;
-
+    
+        const numPellets = 7;
+        const spreadAngle = 20;
+        let targetAngle = this.getAimDirection();
+    
+        // Update the aim cone dynamically
+        this.updateAimCone(targetAngle);
+    
+        // Create bullet group
+        this.bullets = this.physics.add.group();
+    
+        // Fire shotgun pellets with spread
+        for (let i = 0; i < numPellets; i++) {
+            let angleOffset = Phaser.Math.DegToRad(Phaser.Math.Between(-spreadAngle, spreadAngle));
+            let bulletAngle = targetAngle + angleOffset;
+            let velocity = new Phaser.Math.Vector2(Math.cos(bulletAngle), Math.sin(bulletAngle)).scale(600);
+    
+            let bullet = this.bullets.create(this.player.x, this.player.y, 'bullet').setScale(0.1);
+            bullet.setVelocity(velocity.x, velocity.y);
+            bullet.setRotation(bulletAngle);
+            bullet.setDepth(5);
+    
+            this.time.delayedCall(250, () => bullet.destroy(), [], this);
+        }
+    
+        if (this.ammo === 0) this.reload();
+    
+        this.physics.add.collider(this.activeCops, this.bullets, (cop, bullet) => {
+            this.destroyCop(cop);
+            bullet.destroy();
+        });
+    }
+    
+    // Determines the aiming direction dynamically
+    getAimDirection() {
         if (this.autoAim) {
             let nearestCop = this.getNearestCop();
             if (nearestCop) {
-                targetAngle = Phaser.Math.Angle.Between(
+                return Phaser.Math.Angle.Between(
                     this.player.x, this.player.y,
                     nearestCop.x, nearestCop.y
                 );
             }
-        } else {
-            let pointer = this.input.activePointer;
-            let worldPoint = this.cameras.main.getWorldPoint(pointer.x, pointer.y);
-            targetAngle = Phaser.Math.Angle.Between(
-                this.player.x, this.player.y,
-                worldPoint.x, worldPoint.y
-            );
         }
-
-        this.bullets = this.physics.add.group();
-        console.log(this.bullets)
-
-        // https://www.reddit.com/r/gamemaker/comments/msdfc3/how_to_make_bullets_with_automatic_spread/
-        // I had to credit this because this was the only method I was able to get working for the shot spread 
-        // Was super helpful
-        for (let i = 0; i < numPellets; i++) {
-            let angleOffset = Phaser.Math.Between(-spreadAngle, spreadAngle);
-            let bulletAngle = targetAngle + Phaser.Math.DegToRad(angleOffset);
-            let velocity = new Phaser.Math.Vector2(Math.cos(bulletAngle), Math.sin(bulletAngle)).scale(600);
-
-            let bullet = this.bullets.create(this.player.x, this.player.y, 'bullet').setScale(0.1);
-            bullet.setVelocity(velocity.x, velocity.y);
-            bullet.setRotation(bulletAngle);
-            bullet.setDepth(5); // Ensure it's in front of the player
-
-            this.time.delayedCall(250, () => bullet.destroy(), [], this);
-        }
-
-        if (this.ammo === 0) {
-            this.reload();
-        }
-
-        this.physics.add.collider(this.activeCops, this.bullets, (cop, bullet) => {
-            this.destroyCop(cop); // Handle cop destruction
-            bullet.destroy(); // Destroy the bullet
-            console.log("sdfgh")
-        });
+    
+        let pointer = this.input.activePointer;
+        let worldPoint = this.cameras.main.getWorldPoint(pointer.x, pointer.y);
+        return Phaser.Math.Angle.Between(this.player.x, this.player.y, worldPoint.x, worldPoint.y);
+    }
+    
+    // Updates the aim cone position and rotation dynamically
+    updateAimCone(targetAngle) {
+        const coneDistance = 20;
+        let coneX = this.player.x + Math.cos(targetAngle) * coneDistance;
+        let coneY = this.player.y + Math.sin(targetAngle) * coneDistance;
+    
+        this.aimCone.setPosition(coneX, coneY);
+        this.aimCone.setRotation(targetAngle + Phaser.Math.DegToRad(90));
     }
 
     getNearestCop() {
@@ -316,10 +335,40 @@ class Play extends Phaser.Scene {
     }
 
     updateAmmoUI() {
+        // Iterate through each ammo slot
         this.ammoUI.forEach((icon, index) => {
-            icon.setVisible(index < this.ammo);
+            if (index < this.ammo) {
+                icon.setVisible(true);  // Show the ammo icon if we still have ammo
+            } else if (icon.visible) {
+                // Eject the shell when ammo is less than the current index and it's visible
+                let shell = this.add.image(icon.x, icon.y, 'ammo_ui').setScale(0.5);
+                shell.setDepth(10); // Ensure the shell is above the UI layer
+                
+                // Account for the camera's position by converting to world coordinates
+                let worldPosition = this.cameras.main.getWorldPoint(icon.x, icon.y);
+                shell.setPosition(worldPosition.x, worldPosition.y);
+    
+
+                let velocityX = Phaser.Math.Between(-50, 50);  
+                let velocityY = Phaser.Math.Between(-100, -50); 
+    
+                // Animate the shell flying out of the UI
+                this.tweens.add({
+                    targets: shell,
+                    x: shell.x + velocityX,
+                    y: shell.y + velocityY,
+                    angle: Phaser.Math.Between(-180, 180), // Random rotation while moving
+                    duration: 500,
+                    ease: 'Power2',
+                    onComplete: () => shell.destroy(), // Destroy the shell after animation
+                });
+    
+                // Hide the original UI bullet (ammo slot)
+                icon.setVisible(false);
+            }
         });
     }
+    
 
     reload() {
         this.isReloading = true;
@@ -429,7 +478,7 @@ class Play extends Phaser.Scene {
 
         let velocity = new Phaser.Math.Vector2(this.player.body.velocity.x, this.player.body.velocity.y);
 
-        if (this.cursors.up.isDown) {
+        if (this.cursors.up.isDown|| this.keys.up.isDown) {
             velocity.x += forward.x * acceleration;
             velocity.y += forward.y * acceleration;
     
@@ -438,7 +487,7 @@ class Play extends Phaser.Scene {
             }
             this.player.play('speed');
         } 
-        else if (this.cursors.down.isDown) {
+        else if (this.cursors.down.isDown|| this.keys.down.isDown) {
             velocity.x += -forward.x * acceleration;
             velocity.y += -forward.y * acceleration;
     
@@ -451,14 +500,17 @@ class Play extends Phaser.Scene {
             velocity.scale(deceleration); 
         }
     
-        if (this.cursors.left.isDown) {
+        if (this.cursors.left.isDown || this.keys.left.isDown) {
             this.player.angle -= turnSpeed;
             this.player.play('idle-left');
         } 
-        else if (this.cursors.right.isDown) {
+        else if (this.cursors.right.isDown || this.keys.right.isDown) {
             this.player.angle += turnSpeed;
             this.player.play('idle-right');
         }
+
+        let targetAngle = this.getAimDirection();
+        this.updateAimCone(targetAngle);
     
         // drifting velocity
 
@@ -487,6 +539,7 @@ class Play extends Phaser.Scene {
         } else {
             this.driftParticles.stop();
         }
+        // updateAimCone();
 
         for (let i = this.activeCops.length - 1; i >= 0; i--) {
             const cop = this.activeCops[i];
