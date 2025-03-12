@@ -9,7 +9,7 @@ class Options extends Phaser.Scene {
         this.load.image('onbutton', 'selectbutton.png')
         this.load.image('off', 'settingSelector1.png')
         this.load.image('on', 'settingSelector2.png')
-        this.load.image('back', 'Asset 11.png')
+        this.load.image('back', 'optionsBack.png')
 
 
     }
