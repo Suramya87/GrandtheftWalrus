@@ -1,3 +1,4 @@
+
 class Play extends Phaser.Scene {
     constructor() {
         super("playScene");
@@ -17,6 +18,10 @@ class Play extends Phaser.Scene {
         this.isGameOver = false;
 
         this.activeCops = []; // Store cops in the same scene
+        this.ammo = 5;
+        this.maxAmmo = 5;
+        this.reloadTime = 2000;
+        this.isReloading = false;
     }
 
     preload() {
@@ -37,17 +42,23 @@ class Play extends Phaser.Scene {
         this.load.image('unpause', './assets/unpause.png')
         this.load.image('star', './assets/star.png')
         this.load.image('smoke', './assets/smoke.png')
+        this.load.image('bullet', './assets/bullet.png');
+        this.load.image('ammo_ui', './assets/shotgunshell.png');
 
 
     }
 
     create() {
+        // this.bullets = this.physics.add.group({
+        //     classType: Phaser.Physics.Arcade.Image,
+        //     runChildUpdate: true // This ensures child objects (bullets) are updated in the physics world
+        // });
         this.scene.setVisible(false, "backgroundScene"); // Hide the background scene
         if (gameSettings.music) {
             gameSettings.music.stop(); // Stops the music
         }
 
-
+        // TILES
         this.death = this.sound.add('death');
         const map = this.add.tilemap('testJSON');
         const tileset = map.addTilesetImage('temp_test', 'test');
@@ -58,10 +69,10 @@ class Play extends Phaser.Scene {
         this.footpathLayer.setCollisionByProperty({ collides: true });
         // this.KILLLayer.setCollisionByProperty({ collides: true });
 
-    
+        // COPS
         this.enemySpawns = map.getObjectLayer('COPS').objects;
 
-      
+        // Player shit
         const Walrus_spawn = map.findObject('Spawn', (obj) => obj.name === 'Walrus spawn');
         this.player = this.physics.add.sprite(Walrus_spawn.x, Walrus_spawn.y, 'character', 1).setScale(0.25);
         this.player.body.setCollideWorldBounds(true);
@@ -73,12 +84,17 @@ class Play extends Phaser.Scene {
         this.isCooldown = false;
         this.cooldownTime = 2000;
 
-    
+        //Carmera shit
         this.cameras.main.startFollow(this.player, false, 0.5, 0.5);
-        this.cameras.main.setZoom(3);
+        this.cameras.main.setZoom(1);
+
+        this.input.keyboard.on('keydown-Z', () => {
+            this.cameras.main.setZoom(this.cameras.main.zoom === 1 ? 3 : 1);
+        });
+
         this.physics.world.setBounds(0, 0, map.widthInPixels, map.heightInPixels);
 
-        
+        // NEUUUUUUU
         this.physics.add.collider(this.player, this.footpathLayer);
 
         this.driftParticles = this.add.particles(0, 0, 'smoke', {
@@ -111,6 +127,11 @@ class Play extends Phaser.Scene {
             // this.starLevel++;
             this.spawnCop();
         });
+
+        this.input.keyboard.on('keydown-X', () => this.fireShotgun());
+        this.input.keyboard.on('keydown-T', () => this.toggleAutoAim()); // Toggle auto-aim
+        this.createAmmoUI();
+
         this.spaceKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
 
  
@@ -192,8 +213,124 @@ class Play extends Phaser.Scene {
     
         this.starGroup = this.add.group();
         this.updateStars();
+        console.log(this.bullets)
+
+        // this.physics.add.collider(this.activeCops, this.bullets, (cop, bullet) => {
+        //     this.destroyCop(cop); 
+        //     bullet.destroy(); 
+        //     console.log("sdfgh")
+        // });
 
     }
+
+    toggleAutoAim() {
+        console.log(this.autoAim)
+        this.autoAim = !this.autoAim;
+        console.log("Auto-Aim: " + (this.autoAim ? "Enabled" : "Disabled"));
+    }
+
+    createAmmoUI() {
+        this.ammoUI = [];
+        for (let i = 0; i < this.maxAmmo; i++) {
+            let bulletIcon = this.add.image(450 + i * 20, 600, 'ammo_ui')
+                .setScale(0.5)
+                .setScrollFactor(0);
+            this.ammoUI.push(bulletIcon);
+        }
+    }
+
+    fireShotgun() {
+
+        if (this.isReloading || this.ammo <= 0) return;
+
+        this.ammo--;
+        this.updateAmmoUI();
+
+        let numPellets = 7;
+        let spreadAngle = 20;
+        let targetAngle = this.player.rotation;
+
+        if (this.autoAim) {
+            let nearestCop = this.getNearestCop();
+            if (nearestCop) {
+                targetAngle = Phaser.Math.Angle.Between(
+                    this.player.x, this.player.y,
+                    nearestCop.x, nearestCop.y
+                );
+            }
+        } else {
+            let pointer = this.input.activePointer;
+            let worldPoint = this.cameras.main.getWorldPoint(pointer.x, pointer.y);
+            targetAngle = Phaser.Math.Angle.Between(
+                this.player.x, this.player.y,
+                worldPoint.x, worldPoint.y
+            );
+        }
+
+        this.bullets = this.physics.add.group();
+        console.log(this.bullets)
+
+        // https://www.reddit.com/r/gamemaker/comments/msdfc3/how_to_make_bullets_with_automatic_spread/
+        // I had to credit this because this was the only method I was able to get working for the shot spread 
+        // Was super helpful
+        for (let i = 0; i < numPellets; i++) {
+            let angleOffset = Phaser.Math.Between(-spreadAngle, spreadAngle);
+            let bulletAngle = targetAngle + Phaser.Math.DegToRad(angleOffset);
+            let velocity = new Phaser.Math.Vector2(Math.cos(bulletAngle), Math.sin(bulletAngle)).scale(600);
+
+            let bullet = this.bullets.create(this.player.x, this.player.y, 'bullet').setScale(0.1);
+            bullet.setVelocity(velocity.x, velocity.y);
+            bullet.setRotation(bulletAngle);
+            bullet.setDepth(5); // Ensure it's in front of the player
+
+            this.time.delayedCall(250, () => bullet.destroy(), [], this);
+        }
+
+        if (this.ammo === 0) {
+            this.reload();
+        }
+
+        this.physics.add.collider(this.activeCops, this.bullets, (cop, bullet) => {
+            this.destroyCop(cop); // Handle cop destruction
+            bullet.destroy(); // Destroy the bullet
+            console.log("sdfgh")
+        });
+    }
+
+    getNearestCop() {
+        let nearestCop = null;
+        let shortestDistance = Infinity;
+
+        this.activeCops.forEach(cop => {
+            let distance = Phaser.Math.Distance.Between(
+                this.player.x, this.player.y,
+                cop.x, cop.y
+            );
+            if (distance < shortestDistance) {
+                shortestDistance = distance;
+                nearestCop = cop;
+            }
+        });
+
+        return nearestCop;
+    }
+
+    updateAmmoUI() {
+        this.ammoUI.forEach((icon, index) => {
+            icon.setVisible(index < this.ammo);
+        });
+    }
+
+    reload() {
+        this.isReloading = true;
+        this.time.delayedCall(this.reloadTime, () => {
+            this.ammo = this.maxAmmo;
+            this.updateAmmoUI();
+            this.isReloading = false;
+        }, [], this);
+    }
+
+   
     spawnCop() {
         if (this.enemySpawns.length === 0) {
             console.warn("No police");
@@ -222,6 +359,7 @@ class Play extends Phaser.Scene {
         this.physics.add.collider(cop, this.KILLLayer, () => {
             this.destroyCop(cop);
         });
+
     
         this.physics.add.collider(cop, this.player, () => {
             console.log("Get rekt");
@@ -249,7 +387,7 @@ class Play extends Phaser.Scene {
         }
     }
     
-    
+
 
     update() {
 
@@ -258,10 +396,6 @@ class Play extends Phaser.Scene {
         let elapsedTime = Math.floor((this.time.now - this.startTime) / 1000);
         this.timerText.setText(`Time: ${elapsedTime}s`);
     
-        // if (elapsedTime % (this.starUpdateTime / 1000) === 0 && this.starLevel < this.maxStars) {
-        //     this.starLevel++;
-        //     this.updateStars();
-        // }
         if (elapsedTime >= this.lastStarTime + 10 && this.starLevel < this.maxStars) {
             this.starLevel++;
             this.updateStars();
@@ -277,7 +411,6 @@ class Play extends Phaser.Scene {
     
         let acceleration = 10;  
         let maxSpeed = 500;     
-        // let deceleration = 0.99; 
         let deceleration = 1;
         let reverseSpeed = 150;  
         let turnSpeed = 3;      
@@ -286,14 +419,12 @@ class Play extends Phaser.Scene {
         if (this.spaceKey.isDown){
             acceleration = 0;  
             maxSpeed = 400;     
-            // deceleration = 0.00000001; 
             deceleration = 0.8;
 
             reverseSpeed = 150;  
             turnSpeed = 4;      
             driftFactor = 0.96; 
 
-        
     }
 
         let velocity = new Phaser.Math.Vector2(this.player.body.velocity.x, this.player.body.velocity.y);
@@ -356,8 +487,6 @@ class Play extends Phaser.Scene {
         } else {
             this.driftParticles.stop();
         }
-
-
 
         for (let i = this.activeCops.length - 1; i >= 0; i--) {
             const cop = this.activeCops[i];
