@@ -1,0 +1,73 @@
+class clicktostart extends Phaser.Scene {
+    constructor() {
+      super("clicktostartScene")
+    }
+
+    preload(){
+        this.load.path = './assets/'
+        this.load.audio('vicecity', 'vice-city-vibes-grand-theft-auto-style-soundtrack-301060.mp3')
+        this.load.image('road', 'sidewalkhigh.png')
+        this.load.image('background', 'shaded background.png')
+        this.load.image('cabinet', 'cabinet.png')
+        this.load.image('gun', 'gun.png')
+        this.load.image('gunflash', 'gunflash.png')
+        this.load.image('buttons', 'buttons.png')
+        this.load.image('logo', 'GTW logo.png')
+        this.load.image('offbutton', 'selectbuttoff.png')
+        this.load.image('onbutton', 'selectbutton.png')
+        this.load.audio('vicecity', 'vice-city-vibes-grand-theft-auto-style-soundtrack-301060.mp3')
+
+    }
+
+    create(){
+
+        this.HIGHWAY = this.add.tileSprite(0, 0, 1920, 1080, 'road')
+            .setOrigin(0, 0)
+            .setScale(2);
+
+        this.background = this.add.tileSprite(0, 0, 640, 480, 'background')
+            .setOrigin(0, 0)
+            .setScale(2);
+        
+        this.logo = this.add.image(this.cameras.main.width / 2, this.cameras.main.height / 2-100, 'logo')
+            .setScale(1);
+        let startText = this.add.text(this.cameras.main.width / 2, this.cameras.main.height / 2, 'ARM YOUR SELF', {
+                fontFamily: 'Orbitron',
+                fontSize: '45px',
+                color: '#FFFFFF'
+            }).setOrigin(0.5);
+        
+            this.tweens.add({
+                targets: startText,
+                alpha: { from: 1, to: 0 }, // Fade out (1 -> 0)
+                duration: 1000, // 1 second fade duration
+                yoyo: true, // Fade back in after fading out
+                repeat: -1, // Loop infinitely
+                ease: 'Sine.easeInOut' // Smooth easing for a gradual effect
+            });
+        
+        this.cabinet = this.add.image(this.cameras.main.width / 2+18, this.cameras.main.height / 2 - 190, 'cabinet')
+            .setScale(1.5,1);
+        this.buttons = this.add.image(this.cameras.main.width / 2-300, this.cameras.main.height / 2+350, 'buttons')
+
+       
+
+        let gunselect = this.add.image(game.config.width / 2+300, game.config.height / 2+410, 'gun') // Default button image
+        .setOrigin(0.5)
+        .setScale(1)
+        .setInteractive()
+        .on('pointerover', () => {
+            gunselect.setTexture('gunflash'); // Change to hover image
+        })
+        .on('pointerout', () => {
+            gunselect.setTexture('gun'); // Revert to default image
+        })
+        .on('pointerdown', () => {
+            this.scene.start('backgroundScene'); // Start the game when clicked
+        });
+
+    }
+    update() {
+        this.HIGHWAY.tilePositionY -= .5; // Scroll faster
+    }
+}

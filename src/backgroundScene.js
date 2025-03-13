@@ -1,6 +1,6 @@
 class backgroundScene extends Phaser.Scene {
     constructor() {
-        super({ key: "backgroundScene", active: true });
+        super({ key: "backgroundScene", active: false });
     }
     preload(){
         this.load.path = './assets/'

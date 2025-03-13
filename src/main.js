@@ -38,7 +38,7 @@ let config = {
     
     zoom:1,
 
-    scene: [backgroundScene, Menu, Credits, Options, Play, GameOver, COPS, TRAFFIC, ]
+    scene: [clicktostart, backgroundScene, Menu, Credits, Options, Play, GameOver, COPS, TRAFFIC, ]
   }
 
 
