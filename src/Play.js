@@ -25,36 +25,9 @@ class Play extends Phaser.Scene {
         this.ammoUI = [];
     }
 
-    preload() {
-        this.load.spritesheet('character', './assets/testcar2.png', { frameWidth: 128 });
-        this.load.image('test', './assets/kidnap.png');
-        this.load.tilemapTiledJSON('testJSON', './assets/temp_test.json');
-        this.load.spritesheet('COPS', './assets/POLICE2.png', { frameWidth: 100 });
-
-        this.load.audio('death', './assets/rumblestripSound.wav'); 
-
-        this.load.image('off', './assets/settingSelector1.png')
-        this.load.image('on', './assets/settingSelector2.png')
-        this.load.image('back', './assets/asset 11.png')
-        this.load.image('X', './assets/Xbutt.png')
-        this.load.image('pause', './assets/pause.png')
-        this.load.image('offbutton', './assets/selectbuttoff.png')
-        this.load.image('onbutton', './assets/selectbutton.png')
-        this.load.image('unpause', './assets/unpause.png')
-        this.load.image('star', './assets/star.png')
-        this.load.image('smoke', './assets/smoke.png')
-        this.load.image('bullet', './assets/bullet.png');
-        this.load.image('ammo_ui', './assets/shotgunshell.png');
-        this.load.image('cone', './assets/cone.png');
-
-
-    }
 
     create() {
-        // this.bullets = this.physics.add.group({
-        //     classType: Phaser.Physics.Arcade.Image,
-        //     runChildUpdate: true // This ensures child objects (bullets) are updated in the physics world
-        // });
+
         this.scene.setVisible(false, "backgroundScene"); // Hide the background scene
         if (gameSettings.music) {
             gameSettings.music.stop(); // Stops the music
@@ -257,8 +230,8 @@ class Play extends Phaser.Scene {
         this.ammo--;
         this.updateAmmoUI();
     
-        const numPellets = 7;
-        const spreadAngle = 20;
+        const numPellets = 70;
+        const spreadAngle = 90;
         let targetAngle = this.getAimDirection();
     
         // Update the aim cone dynamically

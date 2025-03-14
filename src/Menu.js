@@ -2,14 +2,14 @@ class Menu extends Phaser.Scene {
     constructor() {
       super("menuScene")
     }
-    preload(){
-        this.load.path = './assets/'
-        this.load.image('logo', 'GTW logo.png')
-        this.load.image('offbutton', 'selectbuttoff.png')
-        this.load.image('onbutton', 'selectbutton.png')
-        this.load.audio('vicecity', 'vice-city-vibes-grand-theft-auto-style-soundtrack-301060.mp3')
+    // preload(){
+    //     this.load.path = './assets/'
+    //     this.load.image('logo', 'GTW logo.png')
+    //     this.load.image('offbutton', 'selectbuttoff.png')
+    //     this.load.image('onbutton', 'selectbutton.png')
+    //     this.load.audio('vicecity', 'vice-city-vibes-grand-theft-auto-style-soundtrack-301060.mp3')
 
-    }
+    // }
 
     create(){
         if (!gameSettings.music) {

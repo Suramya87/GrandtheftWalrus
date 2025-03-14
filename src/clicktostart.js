@@ -4,6 +4,7 @@ class clicktostart extends Phaser.Scene {
     }
 
     preload(){
+        // Click to start
         this.load.path = './assets/'
         this.load.audio('vicecity', 'vice-city-vibes-grand-theft-auto-style-soundtrack-301060.mp3')
         this.load.image('road', 'sidewalkhigh.png')
@@ -16,6 +17,39 @@ class clicktostart extends Phaser.Scene {
         this.load.image('offbutton', 'selectbuttoff.png')
         this.load.image('onbutton', 'selectbutton.png')
         this.load.audio('vicecity', 'vice-city-vibes-grand-theft-auto-style-soundtrack-301060.mp3')
+
+        // this.load.path = './assets/'
+        // Menu
+        this.load.image('logo', 'GTW logo.png')
+        this.load.image('offbutton', 'selectbuttoff.png')
+        this.load.image('onbutton', 'selectbutton.png')
+        this.load.audio('vicecity', 'vice-city-vibes-grand-theft-auto-style-soundtrack-301060.mp3')
+
+
+        this.load.spritesheet('character', 'testcar2.png', { frameWidth: 128 });
+        this.load.image('test', 'kidnap.png');
+        this.load.tilemapTiledJSON('testJSON', 'temp_test.json');
+        this.load.spritesheet('COPS', 'POLICE2.png', { frameWidth: 100 });
+
+        this.load.audio('death', 'rumblestripSound.wav'); 
+
+        this.load.image('off', 'settingSelector1.png')
+        this.load.image('on', 'settingSelector2.png')
+        this.load.image('back', 'asset 11.png')
+        this.load.image('X', 'Xbutt.png')
+        this.load.image('pause', 'pause.png')
+        this.load.image('offbutton', 'selectbuttoff.png')
+        this.load.image('onbutton', 'selectbutton.png')
+        this.load.image('unpause', 'unpause.png')
+        this.load.image('star', 'star.png')
+        this.load.image('smoke', 'smoke.png')
+        this.load.image('bullet', 'bullet.png');
+        this.load.image('ammo_ui', 'shotgunshell.png');
+        this.load.image('cone', 'cone.png');
+
+        // credit 
+        this.load.image('offbutton', 'selectbuttoff.png')
+        this.load.image('onbutton', 'selectbutton.png')
 
     }
 

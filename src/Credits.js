@@ -3,14 +3,6 @@ class Credits extends Phaser.Scene {
       super("creditsscene")
     }
 
-    preload(){
-        this.load.path = './assets/'
-        this.load.image('offbutton', 'selectbuttoff.png')
-        this.load.image('onbutton', 'selectbutton.png')
-        
-
-
-    }
 
     create(){
         
