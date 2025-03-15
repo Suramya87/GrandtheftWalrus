@@ -34,7 +34,7 @@ class Menu extends Phaser.Scene {
             playButton.setTexture('offbutton'); // Revert to default image
         })
         .on('pointerdown', () => {
-            this.scene.start('playScene'); // Start the game when clicked
+            this.scene.start('tutorialScene'); // Start the game when clicked
         });
 
         let optionsbutton = this.add.image(game.config.width / 2, game.config.height / 2 + 250, 'offbutton') // Default button image

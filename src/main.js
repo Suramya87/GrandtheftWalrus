@@ -40,7 +40,7 @@ let config = {
     
     zoom:1,
 
-    scene: [clicktostart, backgroundScene, Menu, Credits, Options, Play, GameOver, ]
+    scene: [clicktostart, backgroundScene, Menu, Credits, Options, tutorial, Play, GameOver, ]
   }
 
 

@@ -16,7 +16,6 @@ class clicktostart extends Phaser.Scene {
         this.load.image('logo', 'GTW logo.png')
         this.load.image('offbutton', 'selectbuttoff.png')
         this.load.image('onbutton', 'selectbutton.png')
-        this.load.audio('vicecity', 'vice-city-vibes-grand-theft-auto-style-soundtrack-301060.mp3')
 
         // this.load.path = './assets/'
         // Menu
@@ -59,6 +58,14 @@ class clicktostart extends Phaser.Scene {
         this.load.image('offbutton', 'selectbuttoff.png')
         this.load.image('onbutton', 'selectbutton.png')
 
+        //play sound effects:
+        this.load.audio('crash', 'realCrash.mp3')
+        this.load.audio('drift', 'drift sound.mp3')
+        this.load.audio('blast', 'shotgunblast.mp3')
+        this.load.audio('rumble', 'rumblestripSound.wav')
+        this.load.audio('police', 'policesiren.mp3')
+        this.load.audio('crash', 'crash sound.wav')
+        this.load.audio('reload', 'reload.mp3')
     }
 
     create(){

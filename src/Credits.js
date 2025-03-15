@@ -30,7 +30,7 @@ class Credits extends Phaser.Scene {
        Samuel Webster
         Suramya Shakya
        Samuel Webster
-          Samuel / Suramya
+  PIXABOY.com
           Samuel / Suramya
 DeltaX-Music
         `;
