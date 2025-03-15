@@ -16,17 +16,17 @@ class tutorial extends Phaser.Scene {
         this.add.text(380, 210, "W", {
             fontFamily: "Orbitron",
             fontSize: "40px",
-            color: "#FFFFFF",
+            color: "#808285",
         }).setOrigin(0.5);
         this.add.text(315, 290, "A", {
             fontFamily: "Orbitron",
             fontSize: "40px",
-            color: "#FFFFFF",
+            color: "#808285",
         }).setOrigin(0.5);
         this.add.text(450, 290, "D", {
             fontFamily: "Orbitron",
             fontSize: "40px",
-            color: "#FFFFFF",
+            color: "#808285",
         }).setOrigin(0.5);
         this.add.text(510, 220, "OR", {
             fontFamily: "Orbitron",
@@ -34,6 +34,17 @@ class tutorial extends Phaser.Scene {
             color: "#FFFFFF",
         }).setOrigin(0.5);
 
+        this.add.text(510, 425, "DRIFT", {
+            fontFamily: "Orbitron",
+            fontSize: "40px",
+            color: "#808285",
+        }).setOrigin(0.5);
+        this.add.text(920, 290, "FIRE", {
+            fontFamily: "Orbitron",
+            fontSize: "35px",
+            color: "#808285",
+        }).setOrigin(0.5);
+        
         //buttons
         let continuebutton = this.add.image(game.config.width / 2+250, game.config.height / 2 + 300, 'offbutton') // Default button image
         .setOrigin(0.5)
