@@ -7,8 +7,8 @@ class Play extends Phaser.Scene {
     init() {
         this.SPEED_MULTIPLIER = 1;
         this.PLAYER_VELOCITY = 350;
-        this.followerSpeed = 100 / this.SPEED_MULTIPLIER;
-        this.CHASE_VELOCITY = 200 / this.SPEED_MULTIPLIER;
+        this.followerSpeed = 100;
+        this.CHASE_VELOCITY = 600 / this.SPEED_MULTIPLIER;
         this.player_isTouching = false;
         this.player_isTurning = false;
         this.ROTATION_SPEED = 3;
@@ -16,6 +16,7 @@ class Play extends Phaser.Scene {
         this.timeSurvived = 0;
         this.highScore = localStorage.getItem('highScore') || 0;
         this.isGameOver = false;
+        this.playerLastPosition = null;
 
         this.copSpawnTimer = null;
         this.copSpawnInterval = 5000;
@@ -73,10 +74,10 @@ class Play extends Phaser.Scene {
 
         //Carmera shit
         this.cameras.main.startFollow(this.player, false, 0.5, 0.5);
-        this.cameras.main.setZoom(1);
+        this.cameras.main.setZoom(1.5);
 
         this.input.keyboard.on('keydown-Z', () => {
-            this.cameras.main.setZoom(this.cameras.main.zoom === 1 ? 2 : 1);
+            this.cameras.main.setZoom(this.cameras.main.zoom === 1 ? 1.5 : 1);
         });
 
         this.physics.world.setBounds(0, 0, map.widthInPixels, map.heightInPixels);
@@ -228,7 +229,7 @@ class Play extends Phaser.Scene {
         // this.ammoUI = [];
         for (let i = 0; i < this.maxAmmo; i++) {
             let bulletIcon = this.add.image(450 + i * 20, 600, 'ammo_ui')
-                .setScale(0.5)
+                .setScale(0.75)
                 .setScrollFactor(0);
             this.ammoUI.push(bulletIcon);
         }
@@ -332,7 +333,7 @@ class Play extends Phaser.Scene {
                 icon.setVisible(true);  // Show the ammo icon if we still have ammo
             } else if (icon.visible) {
                 // Eject the shell when ammo is less than the current index and it's visible
-                let shell = this.add.image(icon.x, icon.y, 'ammo_ui').setScale(0.5);
+                let shell = this.add.image(icon.x, icon.y, 'ammo_ui').setScale(0.75);
                 shell.setDepth(10); // Ensure the shell is above the UI layer
                 
                 // Account for the camera's position by converting to world coordinates
@@ -430,9 +431,8 @@ class Play extends Phaser.Scene {
 
 
     update() {
-
         if (this.isGameOver) return;
-
+    
         let elapsedTime = Math.floor((this.time.now - this.startTime) / 1000);
         this.timerText.setText(`Time: ${elapsedTime}s`);
     
@@ -441,73 +441,59 @@ class Play extends Phaser.Scene {
             this.updateStars();
             this.lastStarTime = elapsedTime;
         }
-
+    
         if (!this.player || this.isGameOver) return;
-
+    
         let forward = new Phaser.Math.Vector2(
             Math.sin(this.player.rotation),
             -Math.cos(this.player.rotation)
         );
-
+    
         console.log("Forward Vector:", forward.x, forward.y);
     
-        let acceleration = 10;  
-        let maxSpeed = 1000;     
+        let acceleration = 10;
+        let maxSpeed = 1000;
         let deceleration = 1;
-        let reverseSpeed = 150;  
-        let turnSpeed = 3;      
-        let driftFactor = 0.05; 
-        
-        if (this.spaceKey.isDown){
-            acceleration = 0;  
-            maxSpeed = 800;     
+        let reverseSpeed = 150;
+        let turnSpeed = 3;
+        let driftFactor = 0.05;
+    
+        if (this.spaceKey.isDown) {
+            acceleration = 0;
+            maxSpeed = 800;
             deceleration = 0.8;
-
-            reverseSpeed = 150;  
-            turnSpeed = 4;      
-            driftFactor = 0.96; 
-
-    }
-
+    
+            reverseSpeed = 150;
+            turnSpeed = 4;
+            driftFactor = 0.96;
+        }
+    
+        let targetAngle = this.getAimDirection();
         let velocity = new Phaser.Math.Vector2(this.player.body.velocity.x, this.player.body.velocity.y);
+    
         if (this.cursors.up.isDown || this.keys.up.isDown) {
             velocity.x += forward.x * acceleration;
             velocity.y += forward.y * acceleration;
+    
             if (velocity.length() > maxSpeed) {
                 velocity.setLength(maxSpeed);
             }
             this.player.play('speed');
-        } else if (this.cursors.down.isDown || this.keys.down.isDown) {
-            velocity.x += forward.x * acceleration;
-            velocity.y += forward.y * acceleration;
-            velocity.x = velocity.x * -1;
-            velocity.y = velocity.y * -1;
-    
-            if (velocity.length() > reverseSpeed) {
-                velocity.setLength(maxSpeed);
-            }
-            this.player.play('speed');
-        }
-        else {
-            velocity.scale(deceleration); 
-            // console.log("Deceleration Velocity:", velocity.x, velocity.y);
+        } else {
+            velocity.scale(deceleration);
         }
     
         if (this.cursors.left.isDown || this.keys.left.isDown) {
             this.player.angle -= turnSpeed;
             this.player.play('idle-left');
-        } 
-        else if (this.cursors.right.isDown || this.keys.right.isDown) {
+        } else if (this.cursors.right.isDown || this.keys.right.isDown) {
             this.player.angle += turnSpeed;
             this.player.play('idle-right');
         }
-
-        let targetAngle = this.getAimDirection();
+    
         this.updateAimCone(targetAngle);
     
-        // drifting velocity
-
-        let newForward = new Phaser.Math.Vector2(Math.sin(this.player.rotation),-Math.cos(this.player.rotation));
+        let newForward = new Phaser.Math.Vector2(Math.sin(this.player.rotation), -Math.cos(this.player.rotation));
         velocity.lerp(newForward.scale(velocity.length()), 1 - driftFactor);
     
         this.player.body.velocity.set(velocity.x, velocity.y);
@@ -515,12 +501,12 @@ class Play extends Phaser.Scene {
         if (!this.cursors.left.isDown && !this.cursors.right.isDown && !this.cursors.up.isDown && !this.cursors.down.isDown) {
             this.player.play('normal');
         }
-
-        // let isDrifting = Math.abs(velocity.angle() - this.player.rotation) > 0.2; // Checks if turning
+    
         let isDrifting = this.spaceKey.isDown;
-        let isFast = velocity.length() > 100; 
+        let isFast = velocity.length() > 100;
+    
         if (isDrifting) {
-            console.log("drift")
+            console.log("drift");
         }
     
         if (isDrifting && isFast) {
@@ -529,30 +515,43 @@ class Play extends Phaser.Scene {
                 this.player.x - Math.sin(this.player.rotation) * 20,
                 this.player.y + Math.cos(this.player.rotation) * 20
             );
+            this.ankle_break = true
         } else {
             this.driftParticles.stop();
+            this.ankle_break = false
         }
-        // updateAimCone();
-
+    
+        // Update cop behavior
         for (let i = this.activeCops.length - 1; i >= 0; i--) {
             const cop = this.activeCops[i];
-
+    
             if (!this.player) continue;
-
-            //dumbass cops at the moment but they will be breaking ankles at 5 stars
-
-            if (!cop.lastTurnTime || this.time.now > cop.lastTurnTime + (50 / (this.starLevel + 1))) {
-                let targetAngle = Phaser.Math.Angle.Between(cop.x, cop.y, this.player.x, this.player.y);
-                cop.rotation = Phaser.Math.Angle.RotateTo(cop.rotation, targetAngle, 0.05 * this.starLevel + 0.01);
-                cop.lastTurnTime = this.time.now;
+    
+            // If the player is drifting, start the cooldown for the cop
+            if (this.ankle_break && !cop.turnCooldown) {
+                cop.turnCooldown = true;
+                this.time.delayedCall(1000, () => {
+                    cop.turnCooldown = false;
+                }, [], this);
             }
-
-            const speed = this.CHASE_VELOCITY + (this.CHASE_VELOCITY * (this.starLevel/10 ));
+    
+            // If the cop is in cooldown, set turn speed to zero
+            if (cop.turnCooldown) {
+                cop.rotation = cop.rotation; // Maintain current rotation
+            } else {
+                // If not in cooldown, update the cop's target and velocity
+                if (!cop.lastTurnTime || this.time.now > cop.lastTurnTime + (50 / (this.starLevel + 1))) {
+                    let targetAngle = Phaser.Math.Angle.Between(cop.x, cop.y, this.player.x, this.player.y);
+                    cop.rotation = Phaser.Math.Angle.RotateTo(cop.rotation, targetAngle, 0.05 * this.starLevel + 0.01);
+                    cop.lastTurnTime = this.time.now;
+                }
+            }
+    
+            const speed = this.CHASE_VELOCITY + (this.CHASE_VELOCITY * (this.starLevel / 10));
             cop.setVelocity(Math.cos(cop.rotation) * speed, Math.sin(cop.rotation) * speed);
-
+    
             cop.play('not-chillin');
         }
-        
     }
 
    
