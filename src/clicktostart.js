@@ -23,6 +23,8 @@ class clicktostart extends Phaser.Scene {
         this.load.image('offbutton', 'selectbuttoff.png')
         this.load.image('onbutton', 'selectbutton.png')
         this.load.audio('vicecity', 'vice-city-vibes-grand-theft-auto-style-soundtrack-301060.mp3')
+        this.load.image('tutorial', 'tutorialmenu.png')
+
 
         // Moving things
         this.load.spritesheet('character', 'player anims.png', { frameWidth: 64,frameHeight: 128 });
