@@ -29,7 +29,7 @@ class clicktostart extends Phaser.Scene {
         this.load.spritesheet('character', 'player anims.png', { frameWidth: 64,frameHeight: 128 });
         this.load.image('test', 'kidnap.png');
         this.load.tilemapTiledJSON('testJSON', 'temp_test.json');
-        this.load.spritesheet('COPS', 'copcarANIMS.png', { frameWidth: 64,frameHeight: 128 });
+        this.load.spritesheet('COPS', 'copcarANIMS.png', { frameWidth: 128,frameHeight: 64 });
 
         this.load.audio('death', 'rumblestripSound.wav'); 
 

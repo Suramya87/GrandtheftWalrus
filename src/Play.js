@@ -430,6 +430,8 @@ class Play extends Phaser.Scene {
             Math.sin(this.player.rotation),
             -Math.cos(this.player.rotation)
         );
+
+        console.log("Forward Vector:", forward.x, forward.y);
     
         let acceleration = 10;  
         let maxSpeed = 500;     
@@ -450,27 +452,35 @@ class Play extends Phaser.Scene {
     }
 
         let velocity = new Phaser.Math.Vector2(this.player.body.velocity.x, this.player.body.velocity.y);
-
-        if (this.cursors.up.isDown|| this.keys.up.isDown) {
+        if (this.cursors.up.isDown || this.keys.up.isDown) {
             velocity.x += forward.x * acceleration;
             velocity.y += forward.y * acceleration;
+            console.log("VX:",velocity.x)
+            console.log("VY:",velocity.y)
     
             if (velocity.length() > maxSpeed) {
                 velocity.setLength(maxSpeed);
             }
             this.player.play('speed');
-        } 
-        else if (this.cursors.down.isDown|| this.keys.down.isDown) {
-            velocity.x += -forward.x * acceleration;
-            velocity.y += -forward.y * acceleration;
+        } else if (this.cursors.down.isDown || this.keys.down.isDown) {
+            // velocity.set(0, 0);
+            velocity.x += forward.x * acceleration;
+            velocity.y += forward.y * acceleration;
+            console.log("VX:",velocity.x)
+            console.log("VY:",velocity.y)
+            velocity.x = velocity.x * -1;
+            velocity.y = velocity.y * -1;
     
-            if (velocity.length() > maxSpeed) {
+            if (velocity.length() > reverseSpeed) {
                 velocity.setLength(maxSpeed);
             }
+            // console.log("Reverse Velocity:", velocity.x, velocity.y);
+            // console.log("Velocity Length:", velocity.length());
             this.player.play('speed');
         }
         else {
             velocity.scale(deceleration); 
+            // console.log("Deceleration Velocity:", velocity.x, velocity.y);
         }
     
         if (this.cursors.left.isDown || this.keys.left.isDown) {
