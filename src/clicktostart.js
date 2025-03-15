@@ -25,14 +25,21 @@ class clicktostart extends Phaser.Scene {
         this.load.image('onbutton', 'selectbutton.png')
         this.load.audio('vicecity', 'vice-city-vibes-grand-theft-auto-style-soundtrack-301060.mp3')
 
-
+        // Moving things
         this.load.spritesheet('character', 'player anims.png', { frameWidth: 64,frameHeight: 128 });
-        this.load.image('test', 'kidnap.png');
-        this.load.tilemapTiledJSON('testJSON', 'temp_test.json');
         this.load.spritesheet('COPS', 'copcarANIMS.png', { frameWidth: 128,frameHeight: 64 });
 
+        // Maps
+        this.load.image('test', 'kidnap.png');
+        this.load.tilemapTiledJSON('testJSON', 'temp_test.json');
+
+        this.load.image('MAPMAP', 'highwaysheet.png');
+        this.load.tilemapTiledJSON('MAPJSON', 'MAP MAP.json');
+        // this.load.spritesheet('COPS', 'copcarANIMS.png', { frameWidth: 128,frameHeight: 64 });
+        
         this.load.audio('death', 'rumblestripSound.wav'); 
 
+        // UI
         this.load.image('off', 'settingSelector1.png')
         this.load.image('on', 'settingSelector2.png')
         this.load.image('back', 'asset 11.png')
@@ -46,6 +53,7 @@ class clicktostart extends Phaser.Scene {
         this.load.image('bullet', 'bullet.png');
         this.load.image('ammo_ui', 'shotgunshell.png');
         this.load.image('cone', 'cone.png');
+        this.load.image('WALRUS', 'walrus.png');
 
         // credit 
         this.load.image('offbutton', 'selectbuttoff.png')

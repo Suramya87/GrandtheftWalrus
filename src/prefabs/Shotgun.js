@@ -1,43 +1,48 @@
-class AmmoUI {
-    constructor(scene, maxAmmo) {
-        this.scene = scene;
-        this.maxAmmo = maxAmmo;
-        this.ammoUI = [];
-
-        for (let i = 0; i < maxAmmo; i++) {
-            let bulletIcon = scene.add.image(450 + i * 20, 600, 'ammo_ui')
-                .setScale(0.5)
-                .setScrollFactor(0);
-            this.ammoUI.push(bulletIcon);
-        }
+class ShotgunScene extends Phaser.Scene {
+    constructor() {
+        super("shotgunScene");
     }
 
-    updateAmmoUI(ammo) {
-        this.ammoUI.forEach((icon, index) => {
-            if (index < ammo) {
-                icon.setVisible(true);
-            } else if (icon.visible) {
-                let shell = this.scene.add.image(icon.x, icon.y, 'ammo_ui').setScale(0.5);
-                shell.setDepth(10);
+    create() {
+        // Get the player from the PlayerScene
+        const player = this.registry.get('player');
 
-                let worldPosition = this.scene.cameras.main.getWorldPoint(icon.x, icon.y);
-                shell.setPosition(worldPosition.x, worldPosition.y);
+        // Initialize shotgun properties
+        this.ammo = 5;
+        this.maxAmmo = 5;
+        this.reloadTime = 2000;
+        this.isReloading = false;
 
-                let velocityX = Phaser.Math.Between(-50, 50);
-                let velocityY = Phaser.Math.Between(-100, -50);
+        // Share shotgun data with other scenes
+        this.registry.set('ammo', this.ammo);
+    }
 
-                this.scene.tweens.add({
-                    targets: shell,
-                    x: shell.x + velocityX,
-                    y: shell.y + velocityY,
-                    angle: Phaser.Math.Between(-180, 180),
-                    duration: 500,
-                    ease: 'Power2',
-                    onComplete: () => shell.destroy(),
-                });
+    fireShotgun() {
+        if (this.isReloading || this.ammo <= 0) return;
 
-                icon.setVisible(false);
-            }
-        });
+        this.ammo--;
+        this.registry.set('ammo', this.ammo);
+
+        const player = this.registry.get('player');
+        const targetAngle = Phaser.Math.Angle.Between(player.x, player.y, this.input.activePointer.worldX, this.input.activePointer.worldY);
+
+        // Create bullets
+        const bullets = this.physics.add.group();
+        for (let i = 0; i < 10; i++) {
+            const bullet = bullets.create(player.x, player.y, 'bullet').setScale(0.1);
+            bullet.setVelocity(Math.cos(targetAngle) * 600, Math.sin(targetAngle) * 600);
+            bullet.setRotation(targetAngle);
+        }
+
+        if (this.ammo === 0) this.reload();
+    }
+
+    reload() {
+        this.isReloading = true;
+        this.time.delayedCall(this.reloadTime, () => {
+            this.ammo = this.maxAmmo;
+            this.registry.set('ammo', this.ammo);
+            this.isReloading = false;
+        }, [], this);
     }
 }

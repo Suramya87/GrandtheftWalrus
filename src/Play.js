@@ -17,6 +17,9 @@ class Play extends Phaser.Scene {
         this.highScore = localStorage.getItem('highScore') || 0;
         this.isGameOver = false;
 
+        this.copSpawnTimer = null;
+        this.copSpawnInterval = 5000;
+
         this.activeCops = []; // Store cops in the same scene
         this.ammo = 5;
         this.maxAmmo = 5;
@@ -35,21 +38,26 @@ class Play extends Phaser.Scene {
 
         // TILES
         this.death = this.sound.add('death');
-        const map = this.add.tilemap('testJSON');
-        const tileset = map.addTilesetImage('temp_test', 'test');
-        const bgLayer = map.createLayer('BG',tileset,0,0)
-        this.footpathLayer = map.createLayer('Footpath', tileset, 0, 0);
-        this.KILLLayer = map.createLayer('KILL', tileset, 0, 0);
+        // const map = this.add.tilemap('testJSON');
+        // const tileset = map.addTilesetImage('temp_test', 'test');
+        // const bgLayer = map.createLayer('BG',tileset,0,0)
+        // this.footpathLayer = map.createLayer('Footpath', tileset, 0, 0);
+        // this.KILLLayer = map.createLayer('KILL', tileset, 0, 0);
 
-        this.footpathLayer.setCollisionByProperty({ collides: true });
+        // this.footpathLayer.setCollisionByProperty({ collides: true });
         // this.KILLLayer.setCollisionByProperty({ collides: true });
 
+        const map = this.add.tilemap('MAPJSON');
+        const tileset = map.addTilesetImage('highway', 'MAPMAP');
+        const bgLayer = map.createLayer('ROAD',tileset,0,0)
+        const WHLayer = map.createLayer('water/houses',tileset,0,0)
+
         // COPS
-        this.enemySpawns = map.getObjectLayer('COPS').objects;
+        this.enemySpawns = map.getObjectLayer('COP SPAWN').objects;
 
         // Player shit
-        const Walrus_spawn = map.findObject('Spawn', (obj) => obj.name === 'Walrus spawn');
-        this.player = this.physics.add.sprite(Walrus_spawn.x, Walrus_spawn.y, 'character', 1).setScale(0.25);
+        const Walrus_spawn = map.findObject('PLAYER SPAWN', (obj) => obj.name === 'PLAYER SPAWN');
+        this.player = this.physics.add.sprite(Walrus_spawn.x, Walrus_spawn.y, 'character', 1).setScale(0.5);
         this.player.body.setCollideWorldBounds(true);
         this.player.setSize(48, 48);
         this.player.setCircle(24);
@@ -59,14 +67,16 @@ class Play extends Phaser.Scene {
         this.isCooldown = false;
         this.cooldownTime = 2000;
 
+        this.walrus = this.add.sprite(this.player.x, this.player.y, 'WALRUS').setOrigin(0.5, 0.5).setDepth(10);
+
         this.aimCone = this.add.sprite(this.player.x, this.player.y, 'cone').setOrigin(0.5, 0.5).setDepth(5).setScale(0.25).setAlpha(0.5);
 
         //Carmera shit
         this.cameras.main.startFollow(this.player, false, 0.5, 0.5);
-        this.cameras.main.setZoom(2);
+        this.cameras.main.setZoom(1);
 
         this.input.keyboard.on('keydown-Z', () => {
-            this.cameras.main.setZoom(this.cameras.main.zoom === 3 ? 2 : 2);
+            this.cameras.main.setZoom(this.cameras.main.zoom === 1 ? 2 : 1);
         });
 
         this.physics.world.setBounds(0, 0, map.widthInPixels, map.heightInPixels);
@@ -230,8 +240,8 @@ class Play extends Phaser.Scene {
         this.ammo--;
         this.updateAmmoUI();
     
-        const numPellets = 70;
-        const spreadAngle = 90;
+        const numPellets = 10;
+        const spreadAngle = 20;
         let targetAngle = this.getAimDirection();
     
         // Update the aim cone dynamically
@@ -251,7 +261,7 @@ class Play extends Phaser.Scene {
             bullet.setRotation(bulletAngle);
             bullet.setDepth(5);
     
-            this.time.delayedCall(250, () => bullet.destroy(), [], this);
+            this.time.delayedCall(350, () => bullet.destroy(), [], this);
         }
     
         if (this.ammo === 0) this.reload();
@@ -282,9 +292,17 @@ class Play extends Phaser.Scene {
     // Updates the aim cone position and rotation dynamically
     updateAimCone(targetAngle) {
         const coneDistance = 20;
+
+        const walrusDistance = 1;
         let coneX = this.player.x + Math.cos(targetAngle) * coneDistance;
         let coneY = this.player.y + Math.sin(targetAngle) * coneDistance;
-    
+
+        let walrusX = this.player.x + Math.cos(targetAngle) * walrusDistance;
+        let walrusY = this.player.y + Math.cos(targetAngle) * walrusDistance;
+        
+        this.walrus.setPosition(walrusX, walrusY);
+        this.walrus.setRotation(targetAngle + Phaser.Math.DegToRad(90));
+        // walrus
         this.aimCone.setPosition(coneX, coneY);
         this.aimCone.setRotation(targetAngle + Phaser.Math.DegToRad(90));
     }
@@ -365,7 +383,7 @@ class Play extends Phaser.Scene {
     
         console.log(`WOOPWOOP: (${spawnX}, ${spawnY})`);
     
-        const cop = this.physics.add.sprite(spawnX, spawnY, 'COPS', 0).setScale(0.25).setDepth(10).setAngle(60);
+        const cop = this.physics.add.sprite(spawnX, spawnY, 'COPS', 0).setScale(0.5).setDepth(10).setAngle(60);
         cop.setSize(56, 64);
         cop.setAngle(Phaser.Math.Between(0, 360));
         cop.setCollideWorldBounds(true);
@@ -434,7 +452,7 @@ class Play extends Phaser.Scene {
         console.log("Forward Vector:", forward.x, forward.y);
     
         let acceleration = 10;  
-        let maxSpeed = 500;     
+        let maxSpeed = 1000;     
         let deceleration = 1;
         let reverseSpeed = 150;  
         let turnSpeed = 3;      
@@ -442,7 +460,7 @@ class Play extends Phaser.Scene {
         
         if (this.spaceKey.isDown){
             acceleration = 0;  
-            maxSpeed = 400;     
+            maxSpeed = 800;     
             deceleration = 0.8;
 
             reverseSpeed = 150;  
@@ -455,27 +473,19 @@ class Play extends Phaser.Scene {
         if (this.cursors.up.isDown || this.keys.up.isDown) {
             velocity.x += forward.x * acceleration;
             velocity.y += forward.y * acceleration;
-            console.log("VX:",velocity.x)
-            console.log("VY:",velocity.y)
-    
             if (velocity.length() > maxSpeed) {
                 velocity.setLength(maxSpeed);
             }
             this.player.play('speed');
         } else if (this.cursors.down.isDown || this.keys.down.isDown) {
-            // velocity.set(0, 0);
             velocity.x += forward.x * acceleration;
             velocity.y += forward.y * acceleration;
-            console.log("VX:",velocity.x)
-            console.log("VY:",velocity.y)
             velocity.x = velocity.x * -1;
             velocity.y = velocity.y * -1;
     
             if (velocity.length() > reverseSpeed) {
                 velocity.setLength(maxSpeed);
             }
-            // console.log("Reverse Velocity:", velocity.x, velocity.y);
-            // console.log("Velocity Length:", velocity.length());
             this.player.play('speed');
         }
         else {
@@ -537,7 +547,7 @@ class Play extends Phaser.Scene {
                 cop.lastTurnTime = this.time.now;
             }
 
-            const speed = this.CHASE_VELOCITY + (this.CHASE_VELOCITY * (this.starLevel/20 ));
+            const speed = this.CHASE_VELOCITY + (this.CHASE_VELOCITY * (this.starLevel/10 ));
             cop.setVelocity(Math.cos(cop.rotation) * speed, Math.sin(cop.rotation) * speed);
 
             cop.play('not-chillin');
@@ -545,6 +555,7 @@ class Play extends Phaser.Scene {
         
     }
 
+   
 
 updateStars() {
     this.starGroup.clear(true, true);
