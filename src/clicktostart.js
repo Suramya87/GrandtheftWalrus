@@ -26,10 +26,10 @@ class clicktostart extends Phaser.Scene {
         this.load.audio('vicecity', 'vice-city-vibes-grand-theft-auto-style-soundtrack-301060.mp3')
 
 
-        this.load.spritesheet('character', 'testcar2.png', { frameWidth: 128 });
+        this.load.spritesheet('character', 'player anims.png', { frameWidth: 64,frameHeight: 128 });
         this.load.image('test', 'kidnap.png');
         this.load.tilemapTiledJSON('testJSON', 'temp_test.json');
-        this.load.spritesheet('COPS', 'POLICE2.png', { frameWidth: 100 });
+        this.load.spritesheet('COPS', 'copcarANIMS.png', { frameWidth: 64,frameHeight: 128 });
 
         this.load.audio('death', 'rumblestripSound.wav'); 
 

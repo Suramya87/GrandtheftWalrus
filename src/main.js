@@ -3,11 +3,12 @@
 
 "use strict"
 
+
+
 // let config = {
     // type: Phaser.AUTO, 
     // scene: [ MainMenu, Play],
 // }
-
 // let game = new Phaser.Game(config)
 let gameSettings = {
   sfxVolume: 1,  // Default max volume
@@ -17,6 +18,7 @@ let gameSettings = {
   autoaim: false,
   customSounds: false
 };
+
 
 let config = {
     type: Phaser.AUTO,
@@ -38,7 +40,7 @@ let config = {
     
     zoom:1,
 
-    scene: [clicktostart, backgroundScene, Menu, Credits, Options, Play, GameOver, COPS, TRAFFIC, ]
+    scene: [clicktostart, backgroundScene, Menu, Credits, Options, Play, GameOver, ]
   }
 
 

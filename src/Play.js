@@ -63,10 +63,10 @@ class Play extends Phaser.Scene {
 
         //Carmera shit
         this.cameras.main.startFollow(this.player, false, 0.5, 0.5);
-        this.cameras.main.setZoom(1);
+        this.cameras.main.setZoom(2);
 
         this.input.keyboard.on('keydown-Z', () => {
-            this.cameras.main.setZoom(this.cameras.main.zoom === 3 ? 1 : 3);
+            this.cameras.main.setZoom(this.cameras.main.zoom === 3 ? 2 : 2);
         });
 
         this.physics.world.setBounds(0, 0, map.widthInPixels, map.heightInPixels);

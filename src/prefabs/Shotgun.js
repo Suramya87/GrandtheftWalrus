@@ -1,50 +1,43 @@
-class Shotgun {
-    constructor(scene, player) {
+class AmmoUI {
+    constructor(scene, maxAmmo) {
         this.scene = scene;
-        this.player = player;
-        this.ammo = 5;
-        this.isReloading = false;
-        this.reloadTime = 2000; // 2 seconds
-    }
+        this.maxAmmo = maxAmmo;
+        this.ammoUI = [];
 
-    fire() {
-        if (this.ammo <= 0 || this.isReloading) {
-            return;
-        }
-
-        this.ammo--;
-        console.log("Shot fired! Ammo left:", this.ammo);
-
-        // Fire a spread of pellets
-        for (let i = 0; i < 5; i++) {
-            const angleOffset = Phaser.Math.Between(-15, 15);
-            const bulletAngle = this.player.rotation + Phaser.Math.DegToRad(angleOffset);
-
-            const bullet = this.scene.physics.add.sprite(
-                this.player.x, 
-                this.player.y, 
-                'bullet' // Replace with your bullet sprite
-            );
-
-            this.scene.physics.velocityFromRotation(bulletAngle, 500, bullet.body.velocity);
-            bullet.setScale(0.1);
-            this.scene.time.delayedCall(1000, () => bullet.destroy()); // Remove after 1 sec
-        }
-
-        if (this.ammo === 0) {
-            this.reload();
+        for (let i = 0; i < maxAmmo; i++) {
+            let bulletIcon = scene.add.image(450 + i * 20, 600, 'ammo_ui')
+                .setScale(0.5)
+                .setScrollFactor(0);
+            this.ammoUI.push(bulletIcon);
         }
     }
 
-    reload() {
-        if (this.isReloading) return;
+    updateAmmoUI(ammo) {
+        this.ammoUI.forEach((icon, index) => {
+            if (index < ammo) {
+                icon.setVisible(true);
+            } else if (icon.visible) {
+                let shell = this.scene.add.image(icon.x, icon.y, 'ammo_ui').setScale(0.5);
+                shell.setDepth(10);
 
-        console.log("Reloading...");
-        this.isReloading = true;
-        this.scene.time.delayedCall(this.reloadTime, () => {
-            this.ammo = 5;
-            this.isReloading = false;
-            console.log("Reloaded!");
+                let worldPosition = this.scene.cameras.main.getWorldPoint(icon.x, icon.y);
+                shell.setPosition(worldPosition.x, worldPosition.y);
+
+                let velocityX = Phaser.Math.Between(-50, 50);
+                let velocityY = Phaser.Math.Between(-100, -50);
+
+                this.scene.tweens.add({
+                    targets: shell,
+                    x: shell.x + velocityX,
+                    y: shell.y + velocityY,
+                    angle: Phaser.Math.Between(-180, 180),
+                    duration: 500,
+                    ease: 'Power2',
+                    onComplete: () => shell.destroy(),
+                });
+
+                icon.setVisible(false);
+            }
         });
     }
 }
