@@ -29,6 +29,8 @@ class clicktostart extends Phaser.Scene {
         // Moving things
         this.load.spritesheet('character', 'player anims.png', { frameWidth: 64,frameHeight: 128 });
         this.load.spritesheet('COPS', 'copcarANIMS.png', { frameWidth: 128,frameHeight: 64 });
+        this.load.spritesheet('PENGUIN', 'penguin.png', { frameWidth: 32,frameHeight: 32 });
+
 
         // Maps
         this.load.image('test', 'kidnap.png');

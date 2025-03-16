@@ -21,7 +21,7 @@ class Play extends Phaser.Scene {
         this.playerLastPosition = null;
 
         this.copSpawnTimer = null;
-        this.copSpawnInterval = 5000;
+        this.copSpawnInterval = 2000;
 
         this.activeCops = []; // Store cops in the same scene
         this.ammo = 5;
@@ -60,6 +60,13 @@ class Play extends Phaser.Scene {
             gameSettings.music.stop(); // Stops the music
         }
 
+        this.copSpawnTimer = this.time.addEvent({
+            delay: this.copSpawnInterval, // Initial spawn interval
+            callback: this.spawnCop,
+            callbackScope: this,
+            loop: true
+        });
+
         this.createUI();
 
         // TILES
@@ -75,8 +82,13 @@ class Play extends Phaser.Scene {
 
         const map = this.add.tilemap('MAPJSON');
         const tileset = map.addTilesetImage('highway', 'MAPMAP');
+        // const BDLayer = map.createLayer('GRASS BORDER',tileset,0,0)
         const bgLayer = map.createLayer('ROAD',tileset,0,0)
-        const WHLayer = map.createLayer('water/houses',tileset,0,0)
+        this.boarder = map.createLayer('GRASS BORDER',tileset,0,0)
+        this.boarder.setCollisionByProperty({ BORDER: true });
+        this.WHLayer = map.createLayer('water/houses',tileset,0,0)
+        this.WHLayer.setCollisionByProperty({ building: true });
+        this.WHLayer.setCollisionByProperty({ wawa: true });
 
         // COPS
         this.enemySpawns = map.getObjectLayer('COP SPAWN').objects;
@@ -161,7 +173,48 @@ class Play extends Phaser.Scene {
             left: Phaser.Input.Keyboard.KeyCodes.A,
             right: Phaser.Input.Keyboard.KeyCodes.D
         });
+        // Player collision with buildings
+        // this.physics.add.collider(this.player, this.WHLayer, (player, tile) => {
+        //     if (tile.properties.building) {
+        //         console.log("damn it")
+        //     }
+        // });
+
+        // Cops collision with buildings
+        // this.activeCops.forEach(cop => {
+            // this.physics.add.collider(cop, WHLayer);
+        // });
+
+        // Player collision with water
+        this.physics.add.overlap(this.player, this.WHLayer, (player, tile) => {
+            if (tile.properties.wawa) {
+                this.playerHealth = 0; // Instantly kill the player
+                this.updateHealthBar();
+                this.gameOver();
+            }
+        });
+        this.physics.add.collider(this.player, this.WHLayer, (player, tile) => {
+            if (tile.properties.building) {
+                console.log("damn it")
+            }
+        });
+
+        // // Cops collision with water
+        // this.activeCops.forEach(cop => {
+        //     this.physics.add.overlap(cop, WHLayer, (cop, tile) => {
+        //         if (tile.properties.wawa) {
+        //             this.destroyCop(cop); // Destroy the cop if it touches water
+        //         }
+        //     });
+        // });
         
+        // Player collision with border
+        this.physics.add.collider(this.player, this.boarder);
+
+        // Cops collision with border
+        this.activeCops.forEach(cop => {
+            this.physics.add.collider(cop, BDLayer);
+        });
 
         this.anims.create({
             key: 'normal',
@@ -232,14 +285,38 @@ class Play extends Phaser.Scene {
         // Get camera viewport size considering zoom
     
         // UI elements (scaled & positioned for zoom)
-        this.timerText = this.add.text(435, 350, 'Time: 0s', { 
-            fontSize: '18px', 
+        this.timerText = this.add.text(235, 250, 'Time: 0s', { 
+            fontSize: '36px', 
             fill: '#fff' 
         }).setScrollFactor(0).setDepth(100);
+
+        // Initialize score UI
+        this.score = 0; // Initialize score to 0
+        this.scoreText = this.add.text(235, 275, 'Score: 0', {
+            fontSize: '36px',
+            fill: '#fff'
+        }).setScrollFactor(0).setDepth(100);
+
+        console.log("scoreText created:", this.scoreText); 
     
         this.starGroup = this.add.group();
         this.updateStars();
         console.log(this.bullets)
+
+        // Get penguin spawn points from the tilemap
+        this.penguinSpawns = map.getObjectLayer('PENGUIN SPAWN').objects;
+
+        // Group to store active penguins
+        this.penguins = this.physics.add.group();
+
+        // Spawn penguins on a cooldown
+        this.penguinSpawnCooldown = 5000; // 5 seconds
+        this.time.addEvent({
+            delay: this.penguinSpawnCooldown,
+            callback: this.spawnPenguin,
+            callbackScope: this,
+            loop: true
+        });
 
 
     }
@@ -247,7 +324,7 @@ class Play extends Phaser.Scene {
     toggleAutoAim() {
         console.log(this.autoAim)
         this.autoAim = !this.autoAim;
-        console.log("Auto-Aim: " + (this.autoAim ? "Enabled" : "Disabled"));
+        // console.log("Auto-Aim: " + (this.autoAim ? "Enabled" : "Disabled"));
     }
 
 
@@ -285,6 +362,11 @@ class Play extends Phaser.Scene {
         this.physics.add.collider(this.activeCops, this.bullets, (cop, bullet) => {
             this.destroyCop(cop);
             bullet.destroy();
+        });
+
+        this.physics.add.collider(this.bullets, this.penguins, (bullet, penguin) => {
+            bullet.destroy();
+            this.handlePenguinCollision(penguin);
         });
     }
     
@@ -339,6 +421,51 @@ class Play extends Phaser.Scene {
         });
 
         return nearestCop;
+    }
+
+    spawnPenguin() {
+        if (this.penguinSpawns.length === 0) {
+            console.warn("No penguin spawn points");
+            return;
+        }
+    
+        // Choose a random spawn point
+        console.log("HENK")
+        const spawnPoint = Phaser.Utils.Array.GetRandom(this.penguinSpawns);
+        const spawnX = spawnPoint.x + Phaser.Math.Between(-10, 10);
+        const spawnY = spawnPoint.y + Phaser.Math.Between(-10, 10);
+    
+        // Create a new penguin
+        // console.log("HENK1")
+        const penguin = new Penguin(this, spawnX, spawnY);
+        this.penguins.add(penguin);
+        // console.log("HENK2")
+    
+        // Add collision with player
+        this.physics.add.collider(this.player, penguin, () => {
+            console.log("HENK3")
+            this.handlePenguinCollision(penguin);
+            // console.log("HONK")
+        });
+        // console.log("HENK4")
+    
+        // Add collision with bullets
+        // this.physics.add.collider(this.bullets, penguin, (bullet, penguin) => {
+        //     bullet.destroy();
+        //     this.handlePenguinCollision(penguin);
+        // });
+    }
+    handlePenguinCollision(penguin) {
+        // Award 100 points
+        this.score += 100;
+        this.updateScoreUI();
+
+        // Destroy the penguin
+        penguin.destroyPenguin();
+    }
+
+    updateScoreUI() {
+        this.scoreText.setText(`Score: ${this.score}`);
     }
 
     updateAmmoUI() {
@@ -406,7 +533,7 @@ class Play extends Phaser.Scene {
         const spawnX = spawnPoint.x + Phaser.Math.Between(-10, 10);
         const spawnY = spawnPoint.y + Phaser.Math.Between(-10, 10);
     
-        console.log(`WOOPWOOP: (${spawnX}, ${spawnY})`);
+        // console.log(`WOOPWOOP: (${spawnX}, ${spawnY})`);
     
         const cop = this.physics.add.sprite(spawnX, spawnY, 'COPS', 0).setScale(0.5).setDepth(10).setAngle(60);
         cop.setSize(56, 64);
@@ -419,12 +546,30 @@ class Play extends Phaser.Scene {
         // Add a damage cooldown flag to the cop
         cop.damageCooldown = false;
     
-        this.physics.add.collider(cop, this.footpathLayer, () => {
-            console.log("BOOP");
+        this.physics.add.collider(cop, this.boarder, () => { 
+            // if (tile.properties.building) {
+            console.log("BEEP")
+            // }
         });
+        
+        
+
     
         this.physics.add.collider(cop, this.KILLLayer, () => {
             this.destroyCop(cop);
+        });
+
+        this.physics.add.overlap(cop, this.WHLayer, (cop, tile) => {  
+                if (tile.properties.wawa) {
+                    this.destroyCop(cop); // Destroy the cop if it touches water
+                }
+            });
+
+            this.physics.add.collider(cop, this.WHLayer, (cop, tile) => {
+                if (tile.properties.building) {
+                    console.log("BOOP")
+                }
+                // console.log("BOOP")
         });
     
         this.physics.add.collider(cop, this.player, () => {
@@ -459,7 +604,7 @@ class Play extends Phaser.Scene {
             }
             cop.destroy(); 
             this.death.play();
-            console.log("get gotten");
+            // console.log("get gotten");
         }
     }
     
@@ -475,7 +620,11 @@ class Play extends Phaser.Scene {
             this.starLevel++;
             this.updateStars();
             this.lastStarTime = elapsedTime;
-        }
+        
+
+        this.copSpawnInterval = Math.max(1000, 5000 - (this.starLevel * 500)); // Adjust spawn interval
+        this.copSpawnTimer.delay = this.copSpawnInterval; // Update the timer delay
+    }
     
         if (!this.player || this.isGameOver) return;
     
@@ -484,7 +633,7 @@ class Play extends Phaser.Scene {
             -Math.cos(this.player.rotation)
         );
     
-        console.log("Forward Vector:", forward.x, forward.y);
+        // console.log("Forward Vector:", forward.x, forward.y);
     
         let acceleration = 10;
         let maxSpeed = 1000;
@@ -540,9 +689,9 @@ class Play extends Phaser.Scene {
         let isDrifting = this.spaceKey.isDown;
         let isFast = velocity.length() > 100;
     
-        if (isDrifting) {
-            console.log("drift");
-        }
+        // if (isDrifting) {
+            // console.log("drift");
+        // }
     
         if (isDrifting && isFast) {
             this.driftParticles.start();
@@ -597,8 +746,8 @@ updateStars() {
 
 
     for (let i = 0; i < this.starLevel; i++) {
-        let star = this.add.image(440 + i * 12, 340, 'star')
-            .setScale(0.3) // Adjust scale for zoom
+        let star = this.add.image(250 + i * 50, 200, 'star')
+            .setScale(1) // Adjust scale for zoom
             .setScrollFactor(0)
             .setDepth(100);
         this.starGroup.add(star);
