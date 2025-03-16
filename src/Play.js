@@ -5,6 +5,8 @@ class Play extends Phaser.Scene {
     }
 
     init() {
+        this.playerHealth = 100; 
+        this.maxHealth = 100; 
         this.SPEED_MULTIPLIER = 1;
         this.PLAYER_VELOCITY = 350;
         this.followerSpeed = 100;
@@ -29,13 +31,36 @@ class Play extends Phaser.Scene {
         this.ammoUI = [];
     }
 
-
+    createUI() {
+        // Ammo UI
+        for (let i = 0; i < this.maxAmmo; i++) {
+            let bulletIcon = this.add.image(450 + i * 30, 720, 'ammo_ui')
+                .setScale(0.75)
+                .setScrollFactor(0)
+                .setDepth(9);
+            this.ammoUI.push(bulletIcon);
+        }
+    
+        // Health Bar UI
+        this.healthBarBackground = this.add.image(250, 720, 'HP_bar')
+            .setScrollFactor(0)
+            .setOrigin(0, 0.5)
+            .setDepth(9);
+    
+        this.healthBar = this.add.rectangle(356, 720, 55, 100, 0xff0000)
+            .setScrollFactor(0)
+            .setOrigin(0, 0.5)
+            .setDepth(8)
+            .setAngle(180);
+    }
     create() {
 
         this.scene.setVisible(false, "backgroundScene"); // Hide the background scene
         if (gameSettings.music) {
             gameSettings.music.stop(); // Stops the music
         }
+
+        this.createUI();
 
         // TILES
         this.death = this.sound.add('death');
@@ -123,7 +148,7 @@ class Play extends Phaser.Scene {
             }
         });
         this.input.keyboard.on('keydown-T', () => this.toggleAutoAim()); // Toggle auto-aim
-        this.createAmmoUI();
+        // this.createAmmoUI();
 
         this.spaceKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
 
@@ -225,15 +250,6 @@ class Play extends Phaser.Scene {
         console.log("Auto-Aim: " + (this.autoAim ? "Enabled" : "Disabled"));
     }
 
-    createAmmoUI() {
-        // this.ammoUI = [];
-        for (let i = 0; i < this.maxAmmo; i++) {
-            let bulletIcon = this.add.image(450 + i * 20, 600, 'ammo_ui')
-                .setScale(0.75)
-                .setScrollFactor(0);
-            this.ammoUI.push(bulletIcon);
-        }
-    }
 
     fireShotgun() {
         if (this.isReloading || this.ammo <= 0) return;
@@ -248,14 +264,13 @@ class Play extends Phaser.Scene {
         // Update the aim cone dynamically
         this.updateAimCone(targetAngle);
     
-        // Create bullet group
         this.bullets = this.physics.add.group();
     
         // Fire shotgun pellets with spread
         for (let i = 0; i < numPellets; i++) {
             let angleOffset = Phaser.Math.DegToRad(Phaser.Math.Between(-spreadAngle, spreadAngle));
             let bulletAngle = targetAngle + angleOffset;
-            let velocity = new Phaser.Math.Vector2(Math.cos(bulletAngle), Math.sin(bulletAngle)).scale(600);
+            let velocity = new Phaser.Math.Vector2(Math.cos(bulletAngle), Math.sin(bulletAngle)).scale(1200);
     
             let bullet = this.bullets.create(this.player.x, this.player.y, 'bullet').setScale(0.1);
             bullet.setVelocity(velocity.x, velocity.y);
@@ -341,17 +356,17 @@ class Play extends Phaser.Scene {
                 shell.setPosition(worldPosition.x, worldPosition.y);
     
 
-                let velocityX = Phaser.Math.Between(-50, 50);  
-                let velocityY = Phaser.Math.Between(-100, -50); 
+                let velocityX = Phaser.Math.Between(-150, 150);  
+                let velocityY = Phaser.Math.Between(-200, -150); 
     
                 // Animate the shell flying out of the UI
                 this.tweens.add({
                     targets: shell,
                     x: shell.x + velocityX,
                     y: shell.y + velocityY,
-                    angle: Phaser.Math.Between(-180, 180), // Random rotation while moving
+                    angle: Phaser.Math.Between(-540, 540), // Random rotation while moving
                     duration: 500,
-                    ease: 'Power2',
+                    ease: 'Power1',
                     onComplete: () => shell.destroy(), // Destroy the shell after animation
                 });
     
@@ -359,6 +374,14 @@ class Play extends Phaser.Scene {
                 icon.setVisible(false);
             }
         });
+    }
+    updateHealthBar() {
+        const healthPercentage = this.playerHealth / this.maxHealth;
+        this.healthBar.height  = 50 * healthPercentage; // Calculate new height based on health
+    
+        // // Adjust the height and y-position of the health bar
+        // this.healthBar.height = newHeight;
+        // this.healthBar.y = this.healthBarBackground.y + (this.healthBarBackground.height - newHeight); // Adjust y-position
     }
     
 
@@ -371,7 +394,8 @@ class Play extends Phaser.Scene {
         }, [], this);
     }
 
-   
+
+
     spawnCop() {
         if (this.enemySpawns.length === 0) {
             console.warn("No police");
@@ -390,22 +414,33 @@ class Play extends Phaser.Scene {
         cop.setCollideWorldBounds(true);
         cop.body.setDrag(200);
         cop.body.setFriction(0.1);
-        cop.body.setBounce(2)
+        cop.body.setBounce(2);
+    
+        // Add a damage cooldown flag to the cop
+        cop.damageCooldown = false;
     
         this.physics.add.collider(cop, this.footpathLayer, () => {
             console.log("BOOP");
         });
-        
-
+    
         this.physics.add.collider(cop, this.KILLLayer, () => {
             this.destroyCop(cop);
         });
-
     
         this.physics.add.collider(cop, this.player, () => {
-            console.log("Get rekt");
-            if (this.LANES) {
-                this.gameOver();
+            if (!cop.damageCooldown) {
+                this.playerHealth -= 10; // Reduce player health by 10 on collision
+                this.updateHealthBar(); // Update the health bar
+    
+                if (this.playerHealth <= 0) {
+                    this.gameOver(); // Trigger game over if health drops to 0
+                }
+    
+                // Set damage cooldown
+                cop.damageCooldown = true;
+                this.time.delayedCall(1000, () => {
+                    cop.damageCooldown = false; // Reset cooldown after 1 second
+                }, [], this);
             }
         });
     
@@ -515,10 +550,10 @@ class Play extends Phaser.Scene {
                 this.player.x - Math.sin(this.player.rotation) * 20,
                 this.player.y + Math.cos(this.player.rotation) * 20
             );
-            this.ankle_break = true
+            this.ankle_break = true;
         } else {
             this.driftParticles.stop();
-            this.ankle_break = false
+            this.ankle_break = false;
         }
     
         // Update cop behavior
@@ -570,4 +605,13 @@ updateStars() {
          }
     }
 
+gameOver() {
+        this.isGameOver = true;
+        this.player.setVisible(false); // Hide the player
+        this.cameras.main.shake(500, 0.05); // Add a camera shake effect
+        this.time.delayedCall(1000, () => {
+            this.scene.restart(); // Restart the scene after 1 second
+        }, [], this);
+    }
 }
+

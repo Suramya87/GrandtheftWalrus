@@ -55,6 +55,7 @@ class clicktostart extends Phaser.Scene {
         this.load.image('ammo_ui', 'shotgunshell.png');
         this.load.image('cone', 'cone.png');
         this.load.image('WALRUS', 'walrus.png');
+        this.load.image('HP_bar','speedometer.png')
 
         // credit 
         this.load.image('offbutton', 'selectbuttoff.png')

@@ -1,82 +1,65 @@
-class Player extends Phaser.Physics.Arcade.Sprite {
-    constructor(scene, x, y, texture) {
-        // Call the parent class constructor
-        super(scene, x, y, texture);
-
-        // Add the player to the scene
-        scene.add.existing(this);
-        scene.physics.add.existing(this);
-
-        // Set up player properties
-        this.setScale(0.5);
-        this.setCircle(32);
-        this.body.setCollideWorldBounds(true);
-        this.body.setBounce(0.1);
-        this.body.setDrag(200);
-        this.body.setFriction(-10);
-
-        this.isCooldown = false;
-        this.cooldownTime = 2000;
-
-        // Add aim cone
-        this.aimCone = scene.add.sprite(this.x, this.y, 'cone').setOrigin(0.5, 0.5).setDepth(5).setScale(0.25).setAlpha(0.5);
+class PlayerScene extends Phaser.Scene {
+    constructor() {
+        super("playerScene");
     }
 
-    update(cursors, keys, spaceKey) {
-        let forward = new Phaser.Math.Vector2(Math.sin(this.rotation), -Math.cos(this.rotation));
-        let acceleration = 10;
-        let maxSpeed = 500;
-        let deceleration = 1;
-        let reverseSpeed = 150;
-        let turnSpeed = 3;
-        let driftFactor = 0.05;
+    create() {
+        // Get the map and layers from the MapScene
+        const map = this.registry.get('map');
+        const footpathLayer = this.registry.get('footpathLayer');
 
-        if (spaceKey.isDown) {
-            acceleration = 0;
-            maxSpeed = 400;
-            deceleration = 0.8;
-            reverseSpeed = 150;
-            turnSpeed = 4;
-            driftFactor = 0.96;
-        }
+        // Spawn the player
+        const spawnPoint = map.findObject('Spawn', (obj) => obj.name === 'Walrus spawn');
+        this.player = this.physics.add.sprite(spawnPoint.x, spawnPoint.y, 'character', 1).setScale(0.25);
+        this.player.body.setCollideWorldBounds(true);
+        this.player.setSize(48, 48);
+        this.player.setCircle(24);
+        this.player.body.setBounce(0.1);
+        this.player.body.setDrag(200);
+        this.player.body.setFriction(-10);
 
-        let velocity = new Phaser.Math.Vector2(this.body.velocity.x, this.body.velocity.y);
+        // Add collisions
+        this.physics.add.collider(this.player, footpathLayer);
+
+        // Share the player with other scenes
+        this.registry.set('player', this.player);
+    }
+
+    update() {
+        // Handle player movement and animations
+        if (!this.player) return;
+
+        const cursors = this.input.keyboard.createCursorKeys();
+        const keys = this.input.keyboard.addKeys({
+            up: Phaser.Input.Keyboard.KeyCodes.W,
+            down: Phaser.Input.Keyboard.KeyCodes.S,
+            left: Phaser.Input.Keyboard.KeyCodes.A,
+            right: Phaser.Input.Keyboard.KeyCodes.D
+        });
+
+        let velocity = new Phaser.Math.Vector2(this.player.body.velocity.x, this.player.body.velocity.y);
+        let forward = new Phaser.Math.Vector2(Math.sin(this.player.rotation), -Math.cos(this.player.rotation));
 
         if (cursors.up.isDown || keys.up.isDown) {
-            velocity.x += forward.x * acceleration;
-            velocity.y += forward.y * acceleration;
-
-            if (velocity.length() > maxSpeed) {
-                velocity.setLength(maxSpeed);
-            }
-            this.play('speed');
+            velocity.x += forward.x * 10;
+            velocity.y += forward.y * 10;
+            this.player.play('speed');
         } else if (cursors.down.isDown || keys.down.isDown) {
-            velocity.x += -forward.x * acceleration;
-            velocity.y += -forward.y * acceleration;
-
-            if (velocity.length() > maxSpeed) {
-                velocity.setLength(maxSpeed);
-            }
-            this.play('speed');
+            velocity.x -= forward.x * 10;
+            velocity.y -= forward.y * 10;
+            this.player.play('speed');
         } else {
-            velocity.scale(deceleration);
+            velocity.scale(0.95); // Deceleration
         }
 
         if (cursors.left.isDown || keys.left.isDown) {
-            this.angle -= turnSpeed;
-            this.play('idle-left');
+            this.player.angle -= 3;
+            this.player.play('idle-left');
         } else if (cursors.right.isDown || keys.right.isDown) {
-            this.angle += turnSpeed;
-            this.play('idle-right');
+            this.player.angle += 3;
+            this.player.play('idle-right');
         }
 
-        let newForward = new Phaser.Math.Vector2(Math.sin(this.rotation), -Math.cos(this.rotation));
-        velocity.lerp(newForward.scale(velocity.length()), 1 - driftFactor);
-
-        this.body.velocity.set(velocity.x, velocity.y);
-
-        if (!cursors.left.isDown && !cursors.right.isDown && !cursors.up.isDown && !cursors.down.isDown) {
-            this.play('normal');
-        }
+        this.player.body.velocity.set(velocity.x, velocity.y);
     }
 }
