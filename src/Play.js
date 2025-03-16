@@ -547,7 +547,7 @@ class Play extends Phaser.Scene {
                 }
             }
     
-            const speed = this.CHASE_VELOCITY + (this.CHASE_VELOCITY * (this.starLevel / 10));
+            const speed = this.CHASE_VELOCITY + (this.CHASE_VELOCITY * (this.starLevel / 20));
             cop.setVelocity(Math.cos(cop.rotation) * speed, Math.sin(cop.rotation) * speed);
     
             cop.play('not-chillin');
