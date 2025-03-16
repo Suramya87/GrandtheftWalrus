@@ -29,10 +29,19 @@ class Play extends Phaser.Scene {
         this.reloadTime = 2000;
         this.isReloading = false;
         this.ammoUI = [];
+
+        
     }
 
     createUI() {
         // Ammo UI
+
+        for (let i = 0; i < this.maxAmmo; i++) {
+            let backing = this.add.image(450 + i * 30, 720, 'shellback')
+                .setScale(0.75)
+                .setScrollFactor(0)
+                .setDepth(9);
+            }
         for (let i = 0; i < this.maxAmmo; i++) {
             let bulletIcon = this.add.image(450 + i * 30, 720, 'ammo_ui')
                 .setScale(0.75)
@@ -57,7 +66,6 @@ class Play extends Phaser.Scene {
 
         this.scene.setVisible(false, "backgroundScene"); // Hide the background scene
         if (gameSettings.music) {
-            gameSettings.music.stop(); // Stops the music
         }
 
         this.copSpawnTimer = this.time.addEvent({
@@ -329,9 +337,12 @@ class Play extends Phaser.Scene {
 
 
     fireShotgun() {
+        //sounds:
+        
         if (this.isReloading || this.ammo <= 0) return;
     
         this.ammo--;
+        this.sound.play('blast')
         this.updateAmmoUI();
     
         const numPellets = 10;
@@ -759,7 +770,8 @@ gameOver() {
         this.player.setVisible(false); // Hide the player
         this.cameras.main.shake(500, 0.05); // Add a camera shake effect
         this.time.delayedCall(1000, () => {
-            this.scene.restart(); // Restart the scene after 1 second
+            this.scene.pause(); // Pause Play instead of stopping
+            this.scene.launch('gameOver'); // Launch Game Over scene as an overlay
         }, [], this);
     }
 }

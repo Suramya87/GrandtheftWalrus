@@ -55,13 +55,17 @@ class clicktostart extends Phaser.Scene {
         this.load.image('smoke', 'smoke.png')
         this.load.image('bullet', 'bullet.png');
         this.load.image('ammo_ui', 'shotgunshell.png');
+        this.load.image('shellback', 'shotguninstert.png');
+
         this.load.image('cone', 'cone.png');
         this.load.image('WALRUS', 'walrus.png');
         this.load.image('HP_bar','speedometer.png')
+        this.load.image('wasted', 'WALRUSED.png')
 
         // credit 
         this.load.image('offbutton', 'selectbuttoff.png')
         this.load.image('onbutton', 'selectbutton.png')
+        
 
         //play sound effects:
         this.load.audio('crash', 'realCrash.mp3')
