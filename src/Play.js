@@ -55,13 +55,147 @@ class Play extends Phaser.Scene {
             .setScrollFactor(0)
             .setOrigin(0, 0.5)
             .setDepth(9);
-    
+        
+        let pauseButton = this.add.image(950, 225,'pause') // Default button image
+            .setScrollFactor(0)
+            .setOrigin(0, 0.5)
+            .setDepth(9)
+        .on('pointerover', () => {
+            pauseButton.setTexture('unpause'); // Change to hover image
+        })
+        .on('pointerout', () => {
+            pauseButton.setTexture('pause'); // Revert to default image
+        })
+        .on('pointerdown', () => {
+            this.togglePauseOverlay();
+
+        });
+        
         this.healthBar = this.add.rectangle(356, 720, 55, 100, 0xff0000)
             .setScrollFactor(0)
             .setOrigin(0, 0.5)
             .setDepth(8)
             .setAngle(180);
+        
+        //
+        // Pause Overlay UI
+        this.pauseOverlay = this.add.container(game.config.width / 2, game.config.height / 2);
+        this.pauseOverlay.setVisible(false); // Initially hidden
+
+        let overlayBackground = this.add.rectangle(0, 0, 800, 600, 0x000000, 0.7);
+        this.pauseOverlay.add(overlayBackground);
+
+        // SFX Volume Label
+        this.add.text(0, -150, "SFX Volume", {
+            fontFamily: "Orbitron",
+            fontSize: "24px",
+            color: "#FFFFFF",
+        }).setOrigin(0.5).setDepth(10);
+
+        // Music Volume Label
+        this.add.text(0, -50, "Music Volume", {
+            fontFamily: "Orbitron",
+            fontSize: "24px",
+            color: "#FFFFFF",
+        }).setOrigin(0.5).setDepth(10);
+
+        // Slider Graphics
+        let sfxBar = this.add.rectangle(0, 0, 200, 10, 0x555555);
+        let musicBar = this.add.rectangle(0, 100, 200, 10, 0x555555);
+
+        // Position knobs based on saved volume values
+        let sfxKnobX = sfxBar.x - 100 + gameSettings.sfxVolume * 200;
+        let musicKnobX = musicBar.x - 100 + gameSettings.musicVolume * 200;
+
+        let sfxKnob = this.add.rectangle(sfxKnobX, 0, 20, 20, 0xFFFFFF).setInteractive();
+        let musicKnob = this.add.rectangle(musicKnobX, 100, 20, 20, 0xFFFFFF).setInteractive();
+
+        // Make Sliders Draggable
+        this.input.setDraggable(sfxKnob);
+        this.input.setDraggable(musicKnob);
+
+        this.input.on("drag", (pointer, obj, dragX) => {
+            if (obj === sfxKnob) {
+                obj.x = Phaser.Math.Clamp(dragX, sfxBar.x - 100, sfxBar.x + 100);
+                gameSettings.sfxVolume = (obj.x - (sfxBar.x - 100)) / 200;
+
+                // Set volume for all sound effects
+                if (gameSettings.sfx) {
+                    gameSettings.sfx.setVolume(gameSettings.sfxVolume);
+                }
+            }
+
+            if (obj === musicKnob) {
+                obj.x = Phaser.Math.Clamp(dragX, musicBar.x - 100, musicBar.x + 100);
+                gameSettings.musicVolume = (obj.x - (musicBar.x - 100)) / 200;
+
+                // Set volume only for music, NOT global sound
+                if (gameSettings.music) {
+                    gameSettings.music.setVolume(gameSettings.musicVolume);
+                }
+            }
+
+            // Save the new volume settings persistently
+            localStorage.setItem("sfxVolume", gameSettings.sfxVolume);
+            localStorage.setItem("musicVolume", gameSettings.musicVolume);
+        });
+
+        // Load settings when opening the menu
+        if (localStorage.getItem("sfxVolume")) {
+            gameSettings.sfxVolume = parseFloat(localStorage.getItem("sfxVolume"));
+        }
+        if (localStorage.getItem("musicVolume")) {
+            gameSettings.musicVolume = parseFloat(localStorage.getItem("musicVolume"));
+        }
+
+        // Auto Aim Mode Checkbox
+        let autoAimCheckbox = this.add.sprite(0, 200, gameSettings.autoAim ? 'on' : 'off').setInteractive();
+        // Create label for Auto Aim
+        this.add.text(0, 180, "Auto Aim Mode", {
+            fontFamily: "Orbitron",
+            fontSize: "24px",
+            color: "#FFFFFF",
+        }).setOrigin(0.5).setDepth(10);
+
+        // Toggle the checkbox when clicked
+        autoAimCheckbox.on('pointerdown', () => {
+            // Toggle the state of Auto Aim
+            gameSettings.autoAim = !gameSettings.autoAim;
+
+            // Update the texture based on the new state
+            autoAimCheckbox.setTexture(gameSettings.autoAim ? 'on' : 'off');
+
+            // Save the new state persistently
+            localStorage.setItem("autoAim", JSON.stringify(gameSettings.autoAim));
+        });
+
+        // Custom Sounds Checkbox
+        let customSoundsCheckbox = this.add.sprite(0, 300, gameSettings.customSounds ? 'on' : 'off').setInteractive();
+        // Create label for Custom Sounds
+        this.add.text(0, 280, "Custom Sounds:", {
+            fontFamily: "Orbitron",
+            fontSize: "24px",
+            color: "#FFFFFF",
+        }).setOrigin(0.5).setDepth(10);
+
+        // Toggle the checkbox when clicked
+        customSoundsCheckbox.on('pointerdown', () => {
+            // Toggle the state of Custom Sounds
+            gameSettings.customSounds = !gameSettings.customSounds;
+
+            // Update the texture based on the new state
+            customSoundsCheckbox.setTexture(gameSettings.customSounds ? 'on' : 'off');
+
+            // Save the new state persistently
+            localStorage.setItem("customSounds", JSON.stringify(gameSettings.customSounds));
+        });
+}
+
+    togglePauseOverlay() {
+        // Toggle the visibility of the pause overlay
+        this.pauseOverlay.setVisible(!this.pauseOverlay.visible);
     }
+
     create() {
 
         this.scene.setVisible(false, "backgroundScene"); // Hide the background scene
@@ -528,6 +662,7 @@ class Play extends Phaser.Scene {
         this.time.delayedCall(this.reloadTime, () => {
             this.ammo = this.maxAmmo;
             this.updateAmmoUI();
+            
             this.isReloading = false;
         }, [], this);
     }
