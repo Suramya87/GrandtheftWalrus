@@ -5,7 +5,7 @@ class Penguin extends Phaser.Physics.Arcade.Sprite {
         scene.physics.add.existing(this);
 
         // Set up penguin properties
-        this.setScale(0.5);
+        this.setScale(1);
         this.setCollideWorldBounds(true);
         this.setBounce(0.2);
         this.setDrag(100);
