@@ -25,6 +25,9 @@ class Penguin extends Phaser.Physics.Arcade.Sprite {
             callbackScope: this,
             loop: true
         });
+        // this.pain = this.sound.add(gameSettings.customSounds ? 'PAIN' : 'PAIN', {
+        //     volume: gameSettings.sfxVolume
+        // }); 
     }
 
     createAnimations(scene) {
@@ -78,6 +81,7 @@ class Penguin extends Phaser.Physics.Arcade.Sprite {
         // Destroy the penguin after the animation completes
         this.once('animationcomplete', () => {
             this.moveTimer.destroy(); // Stop the movement timer
+            // this.pain.play();
             this.destroy(); // Remove the penguin from the scene
         });
     }

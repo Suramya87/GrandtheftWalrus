@@ -9,22 +9,14 @@ class Play extends Phaser.Scene {
         this.maxHealth = 100; 
         this.SPEED_MULTIPLIER = 1;
         this.PLAYER_VELOCITY = 350;
-        this.followerSpeed = 100;
         this.CHASE_VELOCITY = 600 / this.SPEED_MULTIPLIER;
-        this.player_isTouching = false;
-        this.player_isTurning = false;
         this.ROTATION_SPEED = 3;
-        this.LANES = false;
-        this.timeSurvived = 0;
-        this.highScore = localStorage.getItem('highScore') || 0;
         this.isGameOver = false;
-        this.playerLastPosition = null;
-
         this.copSpawnTimer = null;
         // this.copSpawnInterval = 200000000000000;
         this.copSpawnInterval = 2000;
 
-        this.activeCops = []; // Store cops in the same scene
+        this.activeCops = []; 
         this.ammo = 5;
         this.maxAmmo = 5;
         this.reloadTime = 2000;
@@ -110,14 +102,10 @@ class Play extends Phaser.Scene {
         this.death = this.sound.add(gameSettings.customSounds ? 'crash' : 'crashSound', {
             volume: gameSettings.sfxVolume
         });        
-        // const map = this.add.tilemap('testJSON');
-        // const tileset = map.addTilesetImage('temp_test', 'test');
-        // const bgLayer = map.createLayer('BG',tileset,0,0)
-        // this.footpathLayer = map.createLayer('Footpath', tileset, 0, 0);
-        // this.KILLLayer = map.createLayer('KILL', tileset, 0, 0);
 
-        // this.footpathLayer.setCollisionByProperty({ collides: true });
-        // this.KILLLayer.setCollisionByProperty({ collides: true });
+        this.pain = this.sound.add(gameSettings.customSounds ? 'PAIN' : 'PAIN', {
+            volume: gameSettings.sfxVolume
+        }); 
 
         const map = this.add.tilemap('MAPJSON');
         const tileset = map.addTilesetImage('highway', 'MAPMAP');
@@ -212,17 +200,6 @@ class Play extends Phaser.Scene {
             left: Phaser.Input.Keyboard.KeyCodes.A,
             right: Phaser.Input.Keyboard.KeyCodes.D
         });
-        // Player collision with buildings
-        // this.physics.add.collider(this.player, this.WHLayer, (player, tile) => {
-        //     if (tile.properties.building) {
-        //         console.log("damn it")
-        //     }
-        // });
-
-        // Cops collision with buildings
-        // this.activeCops.forEach(cop => {
-            // this.physics.add.collider(cop, WHLayer);
-        // });
 
         // Player collision with water
         this.physics.add.overlap(this.player, this.WHLayer, (player, tile) => {
@@ -238,15 +215,6 @@ class Play extends Phaser.Scene {
             }
         });
 
-        // // Cops collision with water
-        // this.activeCops.forEach(cop => {
-        //     this.physics.add.overlap(cop, WHLayer, (cop, tile) => {
-        //         if (tile.properties.wawa) {
-        //             this.destroyCop(cop); // Destroy the cop if it touches water
-        //         }
-        //     });
-        // });
-        
         // Player collision with border
         this.physics.add.collider(this.player, this.boarder);
 
@@ -342,10 +310,7 @@ class Play extends Phaser.Scene {
         this.updateStars();
         console.log(this.bullets)
 
-        // Get penguin spawn points from the tilemap
         this.penguinSpawns = map.getObjectLayer('PENGUIN SPAWN').objects;
-
-        // Group to store active penguins
         this.penguins = this.physics.add.group();
 
         // Spawn penguins on a cooldown
@@ -411,19 +376,26 @@ class Play extends Phaser.Scene {
         });
 
         this.physics.add.collider(this.bullets, this.penguins, (bullet, penguin) => {
-            bullet.destroy();
-            this.handlePenguinCollision(penguin);
+            // bullet.destroy();
+            // this.handlePenguinCollision(penguin);
+
+            if (!penguin.getData("hit")) { 
+                penguin.setData("hit", true); 
+                this.pain.play();
+                bullet.destroy();
+                this.handlePenguinCollision(penguin);
+            }
         });
     }
     
-    // Determines the aiming direction dynamically
+
     getAimDirection() {
         if (!this.autoAim) {
-            let nearestCop = this.getNearestCop();
-            if (nearestCop) {
+            let nearestTarget = this.getNearestTarget();
+            if (nearestTarget) {
                 return Phaser.Math.Angle.Between(
                     this.player.x, this.player.y,
-                    nearestCop.x, nearestCop.y
+                    nearestTarget.x, nearestTarget.y
                 );
             }
         }
@@ -433,7 +405,35 @@ class Play extends Phaser.Scene {
         return Phaser.Math.Angle.Between(this.player.x, this.player.y, worldPoint.x, worldPoint.y);
     }
     
-    // Updates the aim cone position and rotation dynamically
+    getNearestTarget() {
+        let nearestTarget = null;
+        let shortestDistance = Infinity;
+    
+        const copDetectionRange = 500;  // Max distance for targeting cops
+        const penguinDetectionRange = 200; // Max distance for targeting penguins
+    
+        let checkTargets = (targets, maxDistance) => {
+            targets.forEach(target => {
+                let distance = Phaser.Math.Distance.Between(
+                    this.player.x, this.player.y,
+                    target.x, target.y
+                );
+                if (distance < shortestDistance && distance <= maxDistance) {
+                    shortestDistance = distance;
+                    nearestTarget = target;
+                }
+            });
+        };
+    
+        checkTargets(this.activeCops, copDetectionRange);
+    
+        if (!nearestTarget) {
+            checkTargets(this.penguins.getChildren(), penguinDetectionRange);
+        }
+    
+        return nearestTarget;
+    }
+
     updateAimCone(targetAngle) {
         const coneDistance = 20;
 
@@ -451,23 +451,6 @@ class Play extends Phaser.Scene {
         this.aimCone.setRotation(targetAngle + Phaser.Math.DegToRad(90));
     }
 
-    getNearestCop() {
-        let nearestCop = null;
-        let shortestDistance = Infinity;
-
-        this.activeCops.forEach(cop => {
-            let distance = Phaser.Math.Distance.Between(
-                this.player.x, this.player.y,
-                cop.x, cop.y
-            );
-            if (distance < shortestDistance) {
-                shortestDistance = distance;
-                nearestCop = cop;
-            }
-        });
-
-        return nearestCop;
-    }
 
     spawnPenguin() {
         if (this.penguinSpawns.length === 0) {
@@ -489,18 +472,25 @@ class Play extends Phaser.Scene {
     
         // Add collision with player
         this.physics.add.collider(this.player, penguin, () => {
-            console.log("HENK3")
-            this.handlePenguinCollision(penguin);
+            if (!penguin.getData("collided")) { 
+                penguin.setData("collided", true); 
+        
+                console.log("HENK3");
+                this.pain.play();
+                this.handlePenguinCollision(penguin);
+            }
             // console.log("HONK")
         });
     }
     handlePenguinCollision(penguin) {
-        // Award 100 points
-        this.score += 100;
-        this.updateScoreUI();
-
-        // Destroy the penguin
-        penguin.destroyPenguin();
+    this.score += 1;
+    this.updateScoreUI();
+    if (Phaser.Math.FloatBetween(0, 1) < 0.1) {
+        this.starLevel++;
+        this.updateStars();
+    }
+    // this.pain.play();
+    penguin.destroyPenguin();
     }
 
     updateScoreUI() {
@@ -511,21 +501,19 @@ class Play extends Phaser.Scene {
         // Iterate through each ammo slot
         this.ammoUI.forEach((icon, index) => {
             if (index < this.ammo) {
-                icon.setVisible(true);  // Show the ammo icon if we still have ammo
+                icon.setVisible(true);  
             } else if (icon.visible) {
-                // Eject the shell when ammo is less than the current index and it's visible
+
                 let shell = this.add.image(icon.x, icon.y, 'ammo_ui').setScale(0.75);
-                shell.setDepth(10); // Ensure the shell is above the UI layer
+                shell.setDepth(10); 
                 
-                // Account for the camera's position by converting to world coordinates
                 let worldPosition = this.cameras.main.getWorldPoint(icon.x, icon.y);
                 shell.setPosition(worldPosition.x, worldPosition.y);
     
 
                 let velocityX = Phaser.Math.Between(-150, 150);  
                 let velocityY = Phaser.Math.Between(-200, -150); 
-    
-                // Animate the shell flying out of the UI
+
                 this.tweens.add({
                     targets: shell,
                     x: shell.x + velocityX,
@@ -533,17 +521,17 @@ class Play extends Phaser.Scene {
                     angle: Phaser.Math.Between(-540, 540), // Random rotation while moving
                     duration: 500,
                     ease: 'Power1',
-                    onComplete: () => shell.destroy(), // Destroy the shell after animation
+                    onComplete: () => shell.destroy(), 
                 });
     
-                // Hide the original UI bullet (ammo slot)
+
                 icon.setVisible(false);
             }
         });
     }
     updateHealthBar() {
         const healthPercentage = this.playerHealth / this.maxHealth;
-        this.healthBar.height  = 50 * healthPercentage; // Calculate new height based on health
+        this.healthBar.height  = 50 * healthPercentage; 
     
     }
     
@@ -554,7 +542,7 @@ class Play extends Phaser.Scene {
             //this.sound.play('reload', { volume: gameSettings.sfxVolume * 4});   
             let soundKey = gameSettings.customSounds ? 'chkchk' : 'reload'; // Switch sound   
             this.sound.play(soundKey, { 
-                volume: Phaser.Math.Clamp(gameSettings.sfxVolume * 1.5, 0, 1) // Boosted volume
+                volume: Phaser.Math.Clamp(gameSettings.sfxVolume * 1.5, 0, 1) 
             });      
             this.ammo = this.maxAmmo;
             this.updateAmmoUI();
@@ -585,11 +573,9 @@ class Play extends Phaser.Scene {
         cop.body.setFriction(0.1);
         cop.body.setBounce(2);
     
-        // Add a damage cooldown flag to the cop
         cop.damageCooldown = false;
     
         this.physics.add.collider(cop, this.boarder, () => { 
-            // if (tile.properties.building) {
             console.log("BEEP")
             // }
         });
@@ -603,7 +589,7 @@ class Play extends Phaser.Scene {
 
         this.physics.add.overlap(cop, this.WHLayer, (cop, tile) => {  
                 if (tile.properties.wawa) {
-                    this.destroyCop(cop); // Destroy the cop if it touches water
+                    this.destroyCop(cop); 
                 }
             });
 
@@ -616,17 +602,17 @@ class Play extends Phaser.Scene {
     
         this.physics.add.collider(cop, this.player, () => {
             if (!cop.damageCooldown) {
-                this.playerHealth -= 10; // Reduce player health by 10 on collision
-                this.updateHealthBar(); // Update the health bar
+                this.playerHealth -= 10; 
+                this.updateHealthBar(); 
     
                 if (this.playerHealth <= 0) {
-                    this.gameOver(); // Trigger game over if health drops to 0
+                    this.gameOver(); 
                 }
     
                 // Set damage cooldown
                 cop.damageCooldown = true;
                 this.time.delayedCall(1000, () => {
-                    cop.damageCooldown = false; // Reset cooldown after 1 second
+                    cop.damageCooldown = false; 
                 }, [], this);
             }
         });
@@ -647,145 +633,13 @@ class Play extends Phaser.Scene {
             cop.destroy(); 
             this.death.setVolume(gameSettings.sfxVolume); 
             this.death.play();
-            // console.log("get gotten");
         }
     }
     
 
-
-    // update() {
-    //     if (this.isGameOver) return;
-    
-    //     let elapsedTime = Math.floor((this.time.now - this.startTime) / 1000);
-    //     this.timerText.setText(`Time: ${elapsedTime}s`);
-    
-    //     if (elapsedTime >= this.lastStarTime + 10 && this.starLevel < this.maxStars) {
-    //         this.starLevel++;
-    //         this.updateStars();
-    //         this.lastStarTime = elapsedTime;
-        
-
-    //     this.copSpawnInterval = Math.max(1000, 5000 - (this.starLevel * 500)); // Adjust spawn interval
-    //     this.copSpawnTimer.delay = this.copSpawnInterval; // Update the timer delay
-    // }
-    
-    //     if (!this.player || this.isGameOver) return;
-    
-    //     let forward = new Phaser.Math.Vector2(
-    //         Math.sin(this.player.rotation),
-    //         -Math.cos(this.player.rotation)
-    //     );
-    
-    //     // console.log("Forward Vector:", forward.x, forward.y);
-    
-    //     let acceleration = 7;
-    //     let maxSpeed = 1000;
-    //     let deceleration = 1;
-    //     let reverseSpeed = 150;
-    //     let turnSpeed = 3;
-    //     let driftFactor = 0.05;
-    
-    //     if (this.spaceKey.isDown) {
-    //         acceleration = 0;
-    //         maxSpeed = 800;
-    //         deceleration = 0.8;
-    
-    //         reverseSpeed = 150;
-    //         turnSpeed = 4;
-    //         driftFactor = 0.96;
-    //     }
-    
-    //     let targetAngle = this.getAimDirection();
-    //     let velocity = new Phaser.Math.Vector2(this.player.body.velocity.x, this.player.body.velocity.y);
-    
-    //     if (this.cursors.up.isDown || this.keys.up.isDown) {
-    //         velocity.x += forward.x * acceleration;
-    //         velocity.y += forward.y * acceleration;
-    
-    //         if (velocity.length() > maxSpeed) {
-    //             velocity.setLength(maxSpeed);
-    //         }
-    //         this.player.play('speed');
-    //     } else {
-    //         velocity.scale(deceleration);
-    //     }
-    
-    //     if (this.cursors.left.isDown || this.keys.left.isDown) {
-    //         this.player.angle -= turnSpeed;
-    //         this.player.play('idle-left');
-    //     } else if (this.cursors.right.isDown || this.keys.right.isDown) {
-    //         this.player.angle += turnSpeed;
-    //         this.player.play('idle-right');
-    //     }
-    
-    //     this.updateAimCone(targetAngle);
-    
-    //     let newForward = new Phaser.Math.Vector2(Math.sin(this.player.rotation), -Math.cos(this.player.rotation));
-    //     velocity.lerp(newForward.scale(velocity.length()), 1 - driftFactor);
-    
-    //     this.player.body.velocity.set(velocity.x, velocity.y);
-    
-    //     if (!this.cursors.left.isDown && !this.cursors.right.isDown && !this.cursors.up.isDown && !this.cursors.down.isDown) {
-    //         this.player.play('normal');
-    //     }
-    
-    //     let isDrifting = this.spaceKey.isDown;
-    //     let isFast = velocity.length() > 100;
-    
-    //     // if (isDrifting) {
-    //         // console.log("drift");
-    //     // }
-    
-    //     if (isDrifting && isFast) {
-    //         this.driftParticles.start();
-    //         this.driftParticles.emitParticleAt(
-    //             this.player.x - Math.sin(this.player.rotation) * 20,
-    //             this.player.y + Math.cos(this.player.rotation) * 20
-    //         );
-    //         this.ankle_break = true;
-    //     } else {
-    //         this.driftParticles.stop();
-    //         this.ankle_break = false;
-    //     }
-    
-    //     // Update cop behavior
-    //     for (let i = this.activeCops.length - 1; i >= 0; i--) {
-    //         const cop = this.activeCops[i];
-    
-    //         if (!this.player) continue;
-    
-    //         // If the player is drifting, start the cooldown for the cop
-    //         if (this.ankle_break && !cop.turnCooldown) {
-    //             cop.turnCooldown = true;
-    //             this.time.delayedCall(1000, () => {
-    //                 cop.turnCooldown = false;
-    //             }, [], this);
-    //         }
-    
-    //         // If the cop is in cooldown, set turn speed to zero
-    //         if (cop.turnCooldown) {
-    //             cop.rotation = cop.rotation; // Maintain current rotation
-    //         } else {
-    //             // If not in cooldown, update the cop's target and velocity
-    //             if (!cop.lastTurnTime || this.time.now > cop.lastTurnTime + (50 / (this.starLevel + 1))) {
-    //                 let targetAngle = Phaser.Math.Angle.Between(cop.x, cop.y, this.player.x, this.player.y);
-    //                 cop.rotation = Phaser.Math.Angle.RotateTo(cop.rotation, targetAngle, 0.05 * this.starLevel + 0.01);
-    //                 cop.lastTurnTime = this.time.now;
-    //             }
-    //         }
-    
-    //         const speed = this.CHASE_VELOCITY + (this.CHASE_VELOCITY * (this.starLevel / 20));
-    //         cop.setVelocity(Math.cos(cop.rotation) * speed, Math.sin(cop.rotation) * speed);
-    
-    //         cop.play('not-chillin');
-    //     }
-    // }
     update() {
         if (this.isGameOver) return;
 
-        // if (this.pauseOverlay.visible) {
-        //     this.pauseOverlay.setPosition(this.cameras.main.scrollX + 640, this.cameras.main.scrollY + 480);
-        // }
     
         let elapsedTime = Math.floor((this.time.now - this.startTime) / 1000);
         this.timerText.setText(`Time: ${elapsedTime}s`);

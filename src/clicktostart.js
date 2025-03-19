@@ -80,6 +80,7 @@ class clicktostart extends Phaser.Scene {
         this.load.audio('blam', 'BLAM.m4a')
         this.load.audio('crash', 'crash.m4a')
         this.load.audio('deathsound', 'death sound1.m4a')
+        this.load.audio('PAIN', 'PAINGUIN.mp3')
 
 
 
