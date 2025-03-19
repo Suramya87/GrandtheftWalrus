@@ -365,7 +365,8 @@ class Play extends Phaser.Scene {
         if (this.isReloading || this.ammo <= 0) return;
     
         this.ammo--;
-        this.sound.play('blast')
+        this.sound.play('blast', { volume: gameSettings.sfxVolume });
+
         this.updateAmmoUI();
     
         const numPellets = 10;
@@ -538,7 +539,8 @@ class Play extends Phaser.Scene {
 
     reload() {
         this.isReloading = true;
-        this.time.delayedCall(this.reloadTime, () => {
+        this.time.delayedCall(this.reloadTime, () => {4
+            this.sound.play('reload', { volume: gameSettings.sfxVolume * 4});            
             this.ammo = this.maxAmmo;
             this.updateAmmoUI();
             
