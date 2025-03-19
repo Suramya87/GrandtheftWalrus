@@ -5,11 +5,15 @@
 
 
 
-// let config = {
-    // type: Phaser.AUTO, 
-    // scene: [ MainMenu, Play],
-// }
-// let game = new Phaser.Game(config)
+////////////////////////TECHNICAL EXECUTION//////////////////////////
+// 1) physics systems: This game contains hit boxes movable/imoveble objects and even a drag mechanic
+// 2) cameras: This game contains a following camera
+// 3) particle effects: while drifting there are some particle effects (we wanted to do more but the game was already feeling like a bit much to handle)
+// 4) text objects: we have small text objects on the UI of the game
+// 5) the animation manager: there are animations for the player, cop cars and the penguin
+// 6) the tween manager: The slugs shells use tweens to make their animation possible
+// 7) timers: there are things like penguing and cop spawns and star level that rely on the use of timers
+// 8) tilemaps: the whole map of teh game was made using tiled.
 let gameSettings = {
   sfxVolume: .5,  // Default max volume
   musicVolume: .5,
@@ -22,10 +26,6 @@ let gameSettings = {
 
 let config = {
     type: Phaser.AUTO,
-    // width: 480,
-    // height: 360,
-    // width: 640,
-    // height: 480,
     width: 1280,
     height: 960,
     render:{
