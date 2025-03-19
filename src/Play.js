@@ -81,6 +81,12 @@ class Play extends Phaser.Scene {
             .setOrigin(0, 0.5)
             .setDepth(8)
             .setAngle(180);
+            
+        this.input.keyboard.on('keydown-ESC', () => {
+            this.scene.pause(); // Pause the current scene
+            this.scene.launch('optionsScene', { previousScene: "playScene" }); 
+            this.scene.bringToTop('optionsScene'); 
+    });
         
 }
 
