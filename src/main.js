@@ -11,8 +11,8 @@
 // }
 // let game = new Phaser.Game(config)
 let gameSettings = {
-  sfxVolume: 1,  // Default max volume
-  musicVolume: 1,
+  sfxVolume: .5,  // Default max volume
+  musicVolume: .5,
   music: null, // To store persistent music
   background: null, // Store background reference
   autoaim: false,
