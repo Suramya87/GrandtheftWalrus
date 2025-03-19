@@ -68,13 +68,21 @@ class clicktostart extends Phaser.Scene {
         
 
         //play sound effects:
-        this.load.audio('crash', 'realCrash.mp3')
         this.load.audio('drift', 'drift sound.mp3')
         this.load.audio('blast', 'shotgunblast.mp3')
         this.load.audio('rumble', 'rumblestripSound.wav')
         this.load.audio('police', 'policesiren.mp3')
         this.load.audio('crashSound', 'crash sound.wav')
         this.load.audio('reload', 'reload.mp3')
+
+        //custom
+        this.load.audio('chkchk', 'chkchk.m4a')
+        this.load.audio('blam', 'BLAM.m4a')
+        this.load.audio('crash', 'crash.m4a')
+        this.load.audio('deathsound', 'death sound1.m4a')
+
+
+
     }
 
     create(){

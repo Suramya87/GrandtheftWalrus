@@ -107,7 +107,9 @@ class Play extends Phaser.Scene {
         this.createUI();
 
         // TILES
-        this.death = this.sound.add('crashSound');
+        this.death = this.sound.add(gameSettings.customSounds ? 'crash' : 'crashSound', {
+            volume: gameSettings.sfxVolume
+        });        
         // const map = this.add.tilemap('testJSON');
         // const tileset = map.addTilesetImage('temp_test', 'test');
         // const bgLayer = map.createLayer('BG',tileset,0,0)
@@ -371,7 +373,10 @@ class Play extends Phaser.Scene {
         if (this.isReloading || this.ammo <= 0) return;
     
         this.ammo--;
-        this.sound.play('blast', { volume: gameSettings.sfxVolume });
+        let soundKey = gameSettings.customSounds ? 'blam' : 'blast'; // Switch sound   
+            this.sound.play(soundKey, { 
+                volume: Phaser.Math.Clamp(gameSettings.sfxVolume * 1.5, 0, 1) // Boosted volume
+            });      
 
         this.updateAmmoUI();
     
@@ -546,7 +551,11 @@ class Play extends Phaser.Scene {
     reload() {
         this.isReloading = true;
         this.time.delayedCall(this.reloadTime, () => {4
-            this.sound.play('reload', { volume: gameSettings.sfxVolume * 4});            
+            //this.sound.play('reload', { volume: gameSettings.sfxVolume * 4});   
+            let soundKey = gameSettings.customSounds ? 'chkchk' : 'reload'; // Switch sound   
+            this.sound.play(soundKey, { 
+                volume: Phaser.Math.Clamp(gameSettings.sfxVolume * 1.5, 0, 1) // Boosted volume
+            });      
             this.ammo = this.maxAmmo;
             this.updateAmmoUI();
             
@@ -636,6 +645,7 @@ class Play extends Phaser.Scene {
                 this.activeCops.splice(index, 1); 
             }
             cop.destroy(); 
+            this.death.setVolume(gameSettings.sfxVolume); 
             this.death.play();
             // console.log("get gotten");
         }
