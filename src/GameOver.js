@@ -24,7 +24,7 @@ class GameOver extends Phaser.Scene {
         }).setOrigin(0.5);
 
         // Show high score
-        this.add.text(width / 2, height / 2 + 50, `High Score: ${this.highScore}s`, {
+        this.add.text(width / 2, height / 2 + 50, `Highest Penguins bonked: ${this.highScore}`, {
             fontSize: '32px',
             fill: '#00ff00',
             fontFamily: 'Orbitron'

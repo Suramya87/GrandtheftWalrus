@@ -23,6 +23,10 @@ class Play extends Phaser.Scene {
         this.isReloading = false;
         this.ammoUI = [];
 
+        this.startTime = this.time.now; 
+        this.timeSurvived = 0; 
+        this.highScore = parseInt(localStorage.getItem('highScore')) || 0;
+
         
     }
 
@@ -284,7 +288,7 @@ class Play extends Phaser.Scene {
             frames: this.anims.generateFrameNumbers('COPS', { start: 5, end: 5 })
         });
 
-        this.startTime = this.time.now;  
+        // this.startTime = this.time.now;  
         this.starLevel = 1;  
         this.maxStars = 7;   
         this.starUpdateTime = 5000; 
@@ -481,6 +485,16 @@ class Play extends Phaser.Scene {
             }
             // console.log("HONK")
         });
+        this.physics.add.collider(penguin, this.boarder, () => { 
+            console.log("HEEEONK")
+            // }
+        });
+        this.physics.add.collider(penguin, this.WHLayer, (cop, tile) => {
+            if (tile.properties.building) {
+                console.log("HEEEONK 2")
+            }
+            // console.log("BOOP")
+    });
     }
     handlePenguinCollision(penguin) {
     this.score += 1;
@@ -494,7 +508,7 @@ class Play extends Phaser.Scene {
     }
 
     updateScoreUI() {
-        this.scoreText.setText(`Score: ${this.score}`);
+        this.scoreText.setText(`Penguins bonked: ${this.score}`);
     }
 
     updateAmmoUI() {
@@ -593,7 +607,7 @@ class Play extends Phaser.Scene {
                 }
             });
 
-            this.physics.add.collider(cop, this.WHLayer, (cop, tile) => {
+        this.physics.add.collider(cop, this.WHLayer, (cop, tile) => {
                 if (tile.properties.building) {
                     console.log("BOOP")
                 }
@@ -640,14 +654,13 @@ class Play extends Phaser.Scene {
     update() {
         if (this.isGameOver) return;
 
+        this.timeSurvived = Math.floor((this.time.now - this.startTime) / 1000);
+        this.timerText.setText(`Time: ${this.timeSurvived}s`);
     
-        let elapsedTime = Math.floor((this.time.now - this.startTime) / 1000);
-        this.timerText.setText(`Time: ${elapsedTime}s`);
-    
-        if (elapsedTime >= this.lastStarTime + 10 && this.starLevel < this.maxStars) {
+        if (this.timeSurvived >= this.lastStarTime + 1 && this.starLevel < this.maxStars) {
             this.starLevel++;
             this.updateStars();
-            this.lastStarTime = elapsedTime;
+            this.lastStarTime = this.timeSurvived;
 
             this.copSpawnInterval = Math.max(1000, 5000 - (this.starLevel * 500));
             this.copSpawnTimer.delay = this.copSpawnInterval;
@@ -726,6 +739,11 @@ class Play extends Phaser.Scene {
     
         // Optimize Cop Behavior by moving it to a separate function
         this.updateCops();
+
+        if (this.score > this.highScore) {
+            this.highScore = this.score;
+            localStorage.setItem('highScore', this.highScore); // Save the new high score to localStorage
+        }
     }
     
     updateCops() {
@@ -773,9 +791,11 @@ gameOver() {
         this.isGameOver = true;
         this.player.setVisible(false); // Hide the player
         this.cameras.main.shake(500, 0.05); // Add a camera shake effect
+        const timeSurvived = this.timeSurvived; // Or calculate the time if you have it
+        const highScore = parseInt(localStorage.getItem('highScore')) || 0;
         this.time.delayedCall(1000, () => {
             this.scene.pause(); // Pause Play instead of stopping
-            this.scene.launch('gameOver'); // Launch Game Over scene as an overlay
+            this.scene.launch('gameOver',{ timeSurvived, highScore }); // Launch Game Over scene as an overlay
         }, [], this);
     }
 }
