@@ -40,7 +40,7 @@ class clicktostart extends Phaser.Scene {
         this.load.tilemapTiledJSON('MAPJSON', 'MAP MAP.json');
         // this.load.spritesheet('COPS', 'copcarANIMS.png', { frameWidth: 128,frameHeight: 64 });
         
-        this.load.audio('death', 'rumblestripSound.wav'); 
+        this.load.audio('rumble', 'rumblestripSound.wav'); 
 
         // UI
         this.load.image('off', 'settingSelector1.png')
@@ -73,7 +73,7 @@ class clicktostart extends Phaser.Scene {
         this.load.audio('blast', 'shotgunblast.mp3')
         this.load.audio('rumble', 'rumblestripSound.wav')
         this.load.audio('police', 'policesiren.mp3')
-        this.load.audio('crash', 'crash sound.wav')
+        this.load.audio('crashSound', 'crash sound.wav')
         this.load.audio('reload', 'reload.mp3')
     }
 

@@ -212,7 +212,7 @@ class Play extends Phaser.Scene {
         this.createUI();
 
         // TILES
-        this.death = this.sound.add('death');
+        this.death = this.sound.add('crashSound');
         // const map = this.add.tilemap('testJSON');
         // const tileset = map.addTilesetImage('temp_test', 'test');
         // const bgLayer = map.createLayer('BG',tileset,0,0)
