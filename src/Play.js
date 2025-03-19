@@ -360,7 +360,7 @@ class Play extends Phaser.Scene {
             let bulletAngle = targetAngle + angleOffset;
             let velocity = new Phaser.Math.Vector2(Math.cos(bulletAngle), Math.sin(bulletAngle)).scale(1200);
     
-            let bullet = this.bullets.create(this.player.x, this.player.y, 'bullet').setScale(0.1);
+            let bullet = this.bullets.create(this.player.x, this.player.y, 'bullet').setScale(5);
             bullet.setVelocity(velocity.x, velocity.y);
             bullet.setRotation(bulletAngle);
             bullet.setDepth(5);
@@ -542,7 +542,7 @@ class Play extends Phaser.Scene {
             //this.sound.play('reload', { volume: gameSettings.sfxVolume * 4});   
             let soundKey = gameSettings.customSounds ? 'chkchk' : 'reload'; // Switch sound   
             this.sound.play(soundKey, { 
-                volume: Phaser.Math.Clamp(gameSettings.sfxVolume * 1.5, 0, 1) 
+                volume: Phaser.Math.Clamp(gameSettings.sfxVolume * 4, 0, 1) // Boosted volume
             });      
             this.ammo = this.maxAmmo;
             this.updateAmmoUI();
