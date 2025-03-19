@@ -61,7 +61,8 @@ class GameOver extends Phaser.Scene {
             backButton.setTexture('offbutton'); // Revert to default image
         })
         .on('pointerdown', () => {
-            this.scene.stop('playScene'); // Start the game when clicked
+            this.scene.resume('playScene'); // Start the game when clicked
+            this.scene.stop('playScene');
             this.scene.start('backgroundScene'); // Start the game when clicked
         });
 
