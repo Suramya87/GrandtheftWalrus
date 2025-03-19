@@ -39,9 +39,35 @@ class tutorial extends Phaser.Scene {
             fontSize: "40px",
             color: "#808285",
         }).setOrigin(0.5);
+        this.add.text(415, 590, "ESC", {
+            fontFamily: "Orbitron",
+            fontSize: "40px",
+            color: "#808285",
+        }).setOrigin(0.5);
+        this.add.text(570, 590, "PAUSE", {
+            fontFamily: "Orbitron",
+            fontSize: "40px",
+            color: "#414042",
+        }).setOrigin(0.5);
+        this.add.text(695, 590, "Z", {
+            fontFamily: "Orbitron",
+            fontSize: "40px",
+            color: "#808285",
+        }).setOrigin(0.5);
+        this.add.text(810, 590, "ZOOM", {
+            fontFamily: "Orbitron",
+            fontSize: "40px",
+            color: "#414042",
+        }).setOrigin(0.5);
         this.add.text(920, 290, "FIRE", {
             fontFamily: "Orbitron",
             fontSize: "35px",
+            color: "#808285",
+        }).setOrigin(0.5);
+
+        this.add.text(912, 470, "X", {
+            fontFamily: "Orbitron",
+            fontSize: "40px",
             color: "#808285",
         }).setOrigin(0.5);
         
