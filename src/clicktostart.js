@@ -53,7 +53,6 @@ class clicktostart extends Phaser.Scene {
         this.load.image('unpause', 'unpause.png')
         this.load.image('star', 'star.png')
         this.load.image('smoke', 'smoke.png')
-        this.load.image('bullet', 'bullet.png');
         this.load.image('ammo_ui', 'shotgunshell.png');
         this.load.image('shellback', 'shotguninstert.png');
 
@@ -61,6 +60,8 @@ class clicktostart extends Phaser.Scene {
         this.load.image('WALRUS', 'walrus.png');
         this.load.image('HP_bar','speedometer.png')
         this.load.image('wasted', 'WALRUSED.png')
+        this.load.image('bullet', 'slurg.png')
+
 
         // credit 
         this.load.image('offbutton', 'selectbuttoff.png')
