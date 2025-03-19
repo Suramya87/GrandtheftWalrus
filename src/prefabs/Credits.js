@@ -34,8 +34,17 @@ class Credits extends Phaser.Scene {
           Samuel / Suramya
 DeltaX-Music
         `;
-
+        let THANKS = `
+        THANK YOU TO ALL OF OUR PLAY TESTERS
+        AND THANK YOU FOR PLAYING OUR GAME!
+        `;
         this.add.text(game.config.width / 2+165,310, namesText, {
+            fontFamily: "Orbitron",
+            fontSize: "40px",
+            color: "#FFFFFF",
+            align: "center"
+        }).setOrigin(0.5);
+        this.add.text(game.config.width / 2-50,600, THANKS, {
             fontFamily: "Orbitron",
             fontSize: "40px",
             color: "#FFFFFF",
