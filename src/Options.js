@@ -112,7 +112,7 @@ class Options extends Phaser.Scene {
             fontFamily: "Orbitron",
             fontSize: "24px",
             color: "#FFFFFF",
-        });
+        }).setDepth(102);
 
         // // Toggle the checkbox when clicked
         // autoAimCheckbox.on('pointerdown', () => {
@@ -134,7 +134,7 @@ class Options extends Phaser.Scene {
             fontFamily: "Orbitron",
             fontSize: "24px",
             color: "#FFFFFF",
-        });
+        }).setDepth(104);
 
         // Toggle the checkbox when clicked
         customSoundsCheckbox.on('pointerdown', () => {
@@ -146,7 +146,7 @@ class Options extends Phaser.Scene {
 
             // Save the new state persistently
             localStorage.setItem("customSounds", JSON.stringify(gameSettings.customSounds));
-        });
+        }).setDepth(104);
 
         //----------------------------------------------------------------------------------------------------
         //buttons
