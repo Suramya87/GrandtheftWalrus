@@ -1,8 +1,9 @@
-// Code Practice: Crash_Campus
+// Code Practice: Grand Theft Walrus
 // Date: 01/31/2025
 
 "use strict"
 
+// Names : Suramya Shakya, Samuel Webster
 
 
 ////////////////////////TECHNICAL EXECUTION//////////////////////////
