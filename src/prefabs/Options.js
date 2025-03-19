@@ -106,13 +106,13 @@ class Options extends Phaser.Scene {
 
         //----------------------------------------------------------------------------------------------------
         // Auto Aim Mode Checkbox
-        let autoAimCheckbox = this.add.sprite(game.config.width / 2, 400, gameSettings.autoAim ? 'on' : 'off').setInteractive();
+        //let autoAimCheckbox = this.add.sprite(game.config.width / 2, 400, gameSettings.autoAim ? 'on' : 'off').setInteractive();
         // Create label for Auto Aim
-        this.add.text(game.config.width / 4, 380, "Auto Aim Mode", {
-            fontFamily: "Orbitron",
-            fontSize: "24px",
-            color: "#FFFFFF",
-        }).setDepth(102);
+        //this.add.text(game.config.width / 4, 380, "Auto Aim Mode", {
+        //    fontFamily: "Orbitron",
+        //    fontSize: "24px",
+         //   color: "#FFFFFF",
+        //}).setDepth(102);
 
         // // Toggle the checkbox when clicked
         // autoAimCheckbox.on('pointerdown', () => {
