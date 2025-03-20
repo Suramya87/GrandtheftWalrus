@@ -25,7 +25,7 @@ class Play extends Phaser.Scene {
 
         this.startTime = this.time.now; 
         this.timeSurvived = 0; 
-        this.highScore = parseInt(localStorage.getItem('highScore')) || 0;
+        this.highScore = parseInt(localStorage.getItem('Bonk')) || 0;
 
         
     }
@@ -792,7 +792,7 @@ gameOver() {
         this.player.setVisible(false); // Hide the player
         this.cameras.main.shake(500, 0.05); // Add a camera shake effect
         const timeSurvived = this.timeSurvived; // Or calculate the time if you have it
-        const highScore = parseInt(localStorage.getItem('highScore')) || 0;
+        const highScore = parseInt(localStorage.getItem('Bonk')) || 0;
         this.time.delayedCall(1000, () => {
             this.scene.pause(); // Pause Play instead of stopping
             this.scene.launch('gameOver',{ timeSurvived, highScore }); // Launch Game Over scene as an overlay
