@@ -10,7 +10,7 @@ class Play extends Phaser.Scene {
         this.SPEED_MULTIPLIER = 1;
         this.PLAYER_VELOCITY = 350;
         this.CHASE_VELOCITY = 600 / this.SPEED_MULTIPLIER;
-        this.ROTATION_SPEED = 3;
+        this.ROTATION_SPEED = 2;
         this.isGameOver = false;
         this.copSpawnTimer = null;
         // this.copSpawnInterval = 200000000000000;
@@ -141,7 +141,7 @@ class Play extends Phaser.Scene {
         this.aimCone = this.add.sprite(this.player.x, this.player.y, 'cone').setOrigin(0.5, 0.5).setDepth(5).setScale(0.25).setAlpha(0.5);
 
         //Carmera shit
-        this.cameras.main.startFollow(this.player, false, 0.5, 0.5);
+        this.cameras.main.startFollow(this.player, false, 1, 1);
         this.cameras.main.setZoom(1.5);
 
         this.input.keyboard.on('keydown-Z', () => {
@@ -675,16 +675,16 @@ class Play extends Phaser.Scene {
     
         // Vehicle Physics Variables
         let acceleration = 10,
-            maxSpeed = 1000,
-            deceleration = 1,
-            turnSpeed = 3,
+            maxSpeed = 1200,
+            deceleration = 0.2,
+            turnSpeed = 2,
             driftFactor = 0.05;
     
         if (this.spaceKey.isDown) {
             acceleration = 0;
-            maxSpeed = 800;
+            maxSpeed = 900;
             deceleration = 0.8;
-            turnSpeed = 4;
+            turnSpeed = 3;
             driftFactor = 0.96;
         }
     
@@ -697,16 +697,19 @@ class Play extends Phaser.Scene {
             if (velocity.length() > maxSpeed) velocity.setLength(maxSpeed);
             this.player.play('speed');
         } else {
-            velocity.scale(deceleration);
+            velocity.x -= forward.x * deceleration;
+            velocity.y -= forward.y * deceleration;
         }
     
         let isTurningLeft = this.cursors.left.isDown || this.keys.left.isDown;
         let isTurningRight = this.cursors.right.isDown || this.keys.right.isDown;
     
         if (isTurningLeft) {
+            console.log(turnSpeed)
             this.player.angle -= turnSpeed;
             this.player.play('idle-left');
         } else if (isTurningRight) {
+            console.log(turnSpeed)
             this.player.angle += turnSpeed;
             this.player.play('idle-right');
         }
