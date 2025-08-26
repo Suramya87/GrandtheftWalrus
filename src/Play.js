@@ -675,16 +675,16 @@ class Play extends Phaser.Scene {
     
         // Vehicle Physics Variables
         let acceleration = 10,
-            maxSpeed = 1200,
+            maxSpeed = 1000,
             deceleration = 0.2,
-            turnSpeed = 2,
+            turnSpeed = 1.2,
             driftFactor = 0.05;
     
         if (this.spaceKey.isDown) {
             acceleration = 0;
-            maxSpeed = 900;
+            maxSpeed = 800;
             deceleration = 0.8;
-            turnSpeed = 3;
+            turnSpeed = 2.5;
             driftFactor = 0.96;
         }
     
